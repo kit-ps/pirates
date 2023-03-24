@@ -10,7 +10,7 @@ The overarching question we need to answer through empirical evaluation is:
 
 ### Mouth-to-Ear Latency
 
-It is important that we evaluate not only *transmission* lantency, but the *mouth-to-ear* latency (i.e., the time between when a word is said by one participant and when it is heard by another).
+It is important that we evaluate not only *transmission* lantency, but the *mouth-to-ear* (MTE) latency (i.e., the time between when a word is said by one participant and when it is heard by another).
 In addition to the transmission latency, this includes the following:
 
 1. Recording and playback
@@ -34,6 +34,13 @@ Optimal snippet length is probably both dependent on the total number of users a
 ### Related Work/Baseline
 
 We will compare Pirates against a naive group extension of Addra, where group communication is enabled via a series of unicasts.
+We call this baseline *Group-Addra*.
+
+### Setup 
+
+To test Pirates' and Group-Addra's MTE latency, we set up the one client, master, relay (for Pirates), and worker each.
+The client acts as both sender and reciever of a test message.
+Data and requests for additional clients will be pre-computed and used to simulate additional load on master/relay/worker in a repeatable and efficient fashion.
 
 ### Experiments
 
