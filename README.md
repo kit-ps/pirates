@@ -18,10 +18,10 @@ In addition to the transmission latency, this includes the following:
 
 We should be easily able to add encoding/decoding steps (of fixed voice data) to our existing prototype.
 It is harder to evaluate is the latency added by the audio stack of the sending and receiving devices, i.e., the time to record and playback the audio, since that depends on the actual devices and requires physical measurements.
-Research by Superpowered Inc. (see [superpowered.com](https://superpowered.com/superpowered-android-media-server) suggest that a modern Android or iOS device adds 10 ms of latency for recording and playback.
+Research by Superpowered Inc. (see [superpowered.com](https://superpowered.com/superpowered-android-media-server)) suggest that a modern Android or iOS device adds 10 ms of latency for recording and playback.
 We therefore add an offset of 10 ms to all measurements to account for recording and playback latency.
 
-### Snippet Length
+### System Parameters/Snippet Length
 
 Prior to the main experiments, we need to determine optimal system parameters for Pirates, especiall the snippet/subround length:
 
@@ -31,4 +31,13 @@ Prior to the main experiments, we need to determine optimal system parameters fo
 
 Optimal snippet length is probably both dependent on the total number of users as well as the group size (and other factors such as server performance and network latency). 
 
+### Related Work/Baseline
 
+We will compare Pirates against a naive group extension of Addra, where group communication is enabled via a series of unicasts.
+
+### Experiments
+
+- Vary number of users
+- Vary group size
+- How many workers?
+- TBD
