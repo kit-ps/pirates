@@ -35,7 +35,7 @@ Optimal snippet length is probably both dependent on the total number of users a
 
 We compare Pirates to related work (i.e., Addra) in Sec. 8.3 (worker scalability) and and Sec. 8.4. (dialing).
 In this evaluation, we investigate Pirates on it's own.
-This is sensible, as --- with a fixed number of workers -- the only latency-relevant difference between Pirates and Group-Addra is that the voice data forwarding is parallelized in Pirates through the addition of relays.
+This is sensible, as - with a fixed number of workers - the only latency-relevant difference between Pirates and Group-Addra is that the voice data forwarding is parallelized in Pirates through the addition of relays.
 
 Thus, we only test Pirates to see if the architecture can support low lantency communication and investigate the advantages of Pirates separately.
 
@@ -46,15 +46,16 @@ The client acts as both sender and reciever of a test message.
 Data and requests for additional clients will be pre-computed and used to simulate additional load on master/relay/worker in a repeatable and efficient fashion.
 In Sec. 8.3., we determine that a good ratio between relays and workers is 1:20 (one relay for every 20 workers).
 We thus use the same ratio here (which determine how much data the single relay has to forward).
+To match Addra's evaluation, we assume 80 workers, 4 relays, and one master (only one of each is actually run).
 An experiment run includes the following steps:
 
 1. Client encodes and encrypts the (dummy) voice snippet
 2. Client sends encrypted voice snippet (with mailbox ID and auth token) to relay
-3. Relay has #clients/#relays voice snippets.
+3. Relay has `#clients/#relays` voice snippets.
     Relay checks auth token for each.
 4. Relay forwards all voice data to worker (as well as additional dummy workers)
 5. Worker assembles whole database
-6. Worker has #clients*(group size - 1)/#workers requests answer.
+6. Worker has `#clients*(group size - 1)/#workers` requests answer.
     Computes all replies.
 7. Worker sends reply to client (and other replies to dummy clients)
 8. Client decrypts and decodes the voice snippet
@@ -63,7 +64,16 @@ For realistic values, we need to ensure that the real client/worker do not recei
 
 ### Experiments
 
-- Vary number of users
-- Vary group size
-- How many workers?
-- TBD
+We not only want to find out if Pirates can achieve sub-400 ms MTE latency *at any cost*, but also how efficiently it can do so.
+The more "communications" the system can handle with a fixed number of servers (while having sub-400 ms MTE latency), the more efficient it is. 
+The amount of "communications" depends both on the number of participants in the system as well as the group size.
+Thus, we test the impact of each:
+
+#### Number of Participants
+
+Fix the group size at 8, increase number of participants until MTE latency exceeds 400 ms.
+
+#### Group Size
+
+Fix number of participants at TBD and increase group size until MTE latency exceeds 400 ms.
+The number of participants for this experiment should be chosen so that for the minimum tested group size, MTE latency is *well below* 400 ms.
