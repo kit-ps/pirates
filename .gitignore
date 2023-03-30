@@ -1,10 +1,13 @@
 client/CMakeFiles
 client/CMakeCache.txt
 client/Makefile
+client/bin/*
 master/CMakeFiles
 master/CMakeCache.txt
 master/Makefile
+master/bin/*
 worker/CMakeFiles
 worker/CMakeCache.txt
 worker/Makefile
+worker/bin/*
 .vscode
