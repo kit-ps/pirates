@@ -1,0 +1,74 @@
+version: "3.7"
+services:
+  client:
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+    volumes:
+      - ./client:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_CLIENT}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/client -c ${IP_CLIENT}
+      -m ${IP_MASTER}
+      -s ${MESSAGE_SIZE}
+      -n ${NUM_MESSAGE}
+      -r ${NUM_ROUNDS}"
+  master:
+    build:
+      context: ./
+      dockerfile: ./master/Dockerfile
+    volumes:
+      - ./master:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_MASTER}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/master -m ${IP_MASTER}
+      -s ${MESSAGE_SIZE}
+      -n ${NUM_MESSAGE}
+      -r ${NUM_ROUNDS}"
+  worker:
+    build:
+      context: ./
+      dockerfile: ./worker/Dockerfile
+    volumes:
+      - ./worker:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_WORKER}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/worker -w ${IP_WORKER}"
+  relay:
+    build:
+      context: ./
+      dockerfile: ./relay/Dockerfile
+    volumes:
+      - ./relay:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_RELAY}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/relay"
+networks:
+  pirates-network:
+    ipam:
+      config:
+        - subnet: ${SUBNET}

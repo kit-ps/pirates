@@ -1,0 +1,3 @@
+/home/app/pirates/CMakeFiles/rebuild_cache.dir
+/home/app/pirates/CMakeFiles/edit_cache.dir
+/home/app/pirates/CMakeFiles/relay.dir
