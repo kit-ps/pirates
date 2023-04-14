@@ -207,6 +207,9 @@ PIRATES_SOURCE_DIR:STATIC=/home/app/pirates
 //The directory containing a CMake configuration file for SEAL.
 SEAL_DIR:PATH=/usr/local/lib/cmake/SEAL-3.5
 
+//Path to a library.
+lpcnetfreedv:FILEPATH=/usr/local/lib/liblpcnetfreedv.so
+
 
 ########################
 # INTERNAL cache entries
