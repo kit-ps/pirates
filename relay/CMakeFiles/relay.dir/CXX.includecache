@@ -9,6 +9,8 @@
 /home/app/pirates/src/relay.cpp
 iostream
 -
+array
+-
 netinet/in.h
 -
 stdio.h
@@ -31,6 +33,10 @@ openssl/aes.h
 -
 seal/seal.h
 /home/app/pirates/src/seal/seal.h
+fstream
+-
+boost/asio.hpp
+-
 
 /usr/local/include/SEAL-3.5/gsl/gsl_assert
 intrin.h

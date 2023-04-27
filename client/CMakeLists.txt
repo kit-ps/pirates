@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 #include_directories()
 #link_directories()
-# Needed to find liblpcnetfreedv.so.0.4b
+# Needed to find liblpcnetfreedv.so.0.4
 link_directories(/usr/local/lib/)
 #link_directories(/home/app/LPCNet/src/)
 

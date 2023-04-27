@@ -18,22 +18,21 @@
 #include "lpcnet/lpcnet_freedv.h"
 #include <fstream>
 #include <boost/asio.hpp>
-//#include "lpcnet_dump.h"
-//#include "lpcnet_quant.h"
-//#include "lpcnet_freedv_internal.h"
 
 using boost::asio::ip::tcp;
 
 std::string CLIENT_IP = "";
 std::string MASTER_IP = "";
+std::string RELAY_IP = "";
 int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
+int GROUP_SIZE;
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES client ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "c:m:s:n:r:")) != -1) {
+    while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
         switch(c) {
             case 'c':
                 CLIENT_IP = std::string(optarg);
@@ -41,6 +40,9 @@ int main(int argc, char **argv) {
                 break;
             case 'm':
                 MASTER_IP = std::string(optarg);
+                break;
+            case 'e':
+                RELAY_IP = std::string(optarg);
                 break;
             case 's':
                 MESSAGE_SIZE = std::stoi(optarg);
@@ -51,9 +53,18 @@ int main(int argc, char **argv) {
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
                 break;
+            case 'g':
+                GROUP_SIZE = std::stoi(optarg);
+                break;
             default:
                 abort();
         }
+    }
+    // Create a file for logging
+    std::ofstream logFile("client_log.txt");
+    if (!logFile) {
+        std::cerr << "Failed to open log file!" << std::endl;
+        return 1;
     }
     //LPCNetFreeDV* sample = lpcnet_freedv_create(1);
     //////////////////////////////////////////// LPCNET ENCODING ////////////////////////////////////////////
@@ -147,7 +158,7 @@ int main(int argc, char **argv) {
     bool connected = false;
     while (!connected) {
         try {
-            tcp::resolver::results_type endpoints = resolver.resolve(MASTER_IP, "8080");
+            tcp::resolver::results_type endpoints = resolver.resolve(RELAY_IP, "8080");
             tcp::socket socket(io_context);
             boost::asio::connect(socket, endpoints);
             boost::system::error_code error;
@@ -163,6 +174,7 @@ int main(int argc, char **argv) {
                     }
                 }
             }
+            connected = true;
         } catch (const boost::system::system_error& e) {
             std::cerr << "Connection failed: " << e.what() << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -207,5 +219,6 @@ int main(int argc, char **argv) {
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Needed time for LPCNet decoding: " << duration.count() << "\u03bcs\n";
+    logFile.close();
     return 0;
 }

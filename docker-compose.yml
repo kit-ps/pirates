@@ -18,25 +18,8 @@ services:
       -m ${IP_MASTER}
       -s ${MESSAGE_SIZE}
       -n ${NUM_MESSAGE}
-      -r ${NUM_ROUNDS}"
-  master:
-    build:
-      context: ./
-      dockerfile: ./master/Dockerfile
-    volumes:
-      - ./master:/home/app/pirates:z
-    cap_add:
-      - NET_ADMIN
-    networks:
-      pirates-network:
-        ipv4_address: ${IP_MASTER}
-    command: >
-      bash -c "cd /home/app/pirates
-      && cmake . && make &&
-      ./bin/master -m ${IP_MASTER}
-      -s ${MESSAGE_SIZE}
-      -n ${NUM_MESSAGE}
-      -r ${NUM_ROUNDS}"
+      -r ${NUM_ROUNDS}
+      -e ${IP_RELAY}"
   worker:
     build:
       context: ./
