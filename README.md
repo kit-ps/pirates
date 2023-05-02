@@ -62,6 +62,39 @@ A test run includes the following steps
 
 For realistic values, we must ensure that the real client/worker does not receive their data first, but is at a random position within the dummies.
 
+### Experiments 
+
+1. LPCNet Encode
+    - Empirically
+    - Parameter: Snippet length
+2. Snippet Encrypt
+    - Empirically
+    - No parameters
+3. Send to relay
+    - Computationally
+    - Parameters: Snippet lenght, number of clients, bandwidth client/relay
+4. Send to worker
+    - Computationally
+    - Parameters: Snippet lenght, number of clients, number of workers, bandwidth relay/worker
+5. Assemble database
+    - Empirically
+    - Parameters: Snippet lenght, number of clients
+    - Plus preprocessing?
+6. Answer PIR queries
+    - Empirically
+    - Parameters: Snippet lenght, number of clients, group size
+7. Send to client
+    - Computationally
+    - Parameters: Snippet lenght, number of clients, group size, bandwidth client/worker
+8. Snippet Decrypt
+    - Empirically
+    - Parameter: Snippet length, group size
+9. Snippet Decode
+    - Empirically
+    - Parameter: Snippet length, group size
+
+Mouth-to-Ear latency: 1. + 2. + ... + 9. + Snippet length + 10 ms hardware latency
+
 ### Experiments
 
 We want to find out not only whether Pirates can achieve sub-400ms MTE latency *at any cost*, but also how efficiently it can do so.
