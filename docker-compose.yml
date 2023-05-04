@@ -1,55 +1,53 @@
 version: "3.7"
 services:
-  client:
+  caller:
     build:
       context: ./
-      dockerfile: ./client/Dockerfile
+      dockerfile: ./caller/Dockerfile
     volumes:
-      - ./client:/home/app/pirates:z
+      - ./caller:/home/app/pirates:z
     cap_add:
       - NET_ADMIN
     networks:
       pirates-network:
-        ipv4_address: ${IP_CLIENT}
+        ipv4_address: ${IP_CALLER}
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/client -c ${IP_CLIENT}
-      -m ${IP_MASTER}
+      ./bin/caller -c ${IP_CALLER}
       -s ${MESSAGE_SIZE}
-      -n ${NUM_MESSAGE}
       -r ${NUM_ROUNDS}
       -e ${IP_RELAY}"
-  worker:
-    build:
-      context: ./
-      dockerfile: ./worker/Dockerfile
-    volumes:
-      - ./worker:/home/app/pirates:z
-    cap_add:
-      - NET_ADMIN
-    networks:
-      pirates-network:
-        ipv4_address: ${IP_WORKER}
-    command: >
-      bash -c "cd /home/app/pirates
-      && cmake . && make &&
-      ./bin/worker -w ${IP_WORKER}"
-  relay:
-    build:
-      context: ./
-      dockerfile: ./relay/Dockerfile
-    volumes:
-      - ./relay:/home/app/pirates:z
-    cap_add:
-      - NET_ADMIN
-    networks:
-      pirates-network:
-        ipv4_address: ${IP_RELAY}
-    command: >
-      bash -c "cd /home/app/pirates
-      && cmake . && make &&
-      ./bin/relay"
+  #worker:
+  #  build:
+  #    context: ./
+  #    dockerfile: ./worker/Dockerfile
+  #  volumes:
+  #    - ./worker:/home/app/pirates:z
+  #  cap_add:
+  #    - NET_ADMIN
+  #  networks:
+  #    pirates-network:
+  #      ipv4_address: ${IP_WORKER}
+  #  command: >
+  #    bash -c "cd /home/app/pirates
+  #    && cmake . && make &&
+  #    ./bin/worker -w ${IP_WORKER}"
+  #relay:
+  #  build:
+  #    context: ./
+  #    dockerfile: ./relay/Dockerfile
+  #  volumes:
+  #    - ./relay:/home/app/pirates:z
+  #  cap_add:
+  #    - NET_ADMIN
+  #  networks:
+  #    pirates-network:
+  #      ipv4_address: ${IP_RELAY}
+  #  command: >
+  #    bash -c "cd /home/app/pirates
+  #    && cmake . && make &&
+  #    ./bin/relay"
 networks:
   pirates-network:
     ipam:

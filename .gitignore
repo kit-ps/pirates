@@ -1,8 +1,8 @@
-client/CMakeFiles
-client/CMakeCache.txt
-client/Makefile
-client/bin/*
-client/client_log.txt
+caller/CMakeFiles
+caller/CMakeCache.txt
+caller/Makefile
+caller/bin/*
+caller/client_log.txt
 master/CMakeFiles
 master/CMakeCache.txt
 master/Makefile
