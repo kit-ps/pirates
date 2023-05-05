@@ -96,7 +96,8 @@ int main(int argc, char **argv) {
     std::cout << "Encoding voice snippet ..." << std::endl;
     // Input and output files for input and encoded audio
     FILE *fin_enc, *fout_enc, *fin_dec, *fout_dec;
-    fin_enc = fopen(std:string("/home/app/pirates/audio/raw_") + std:string(SNIPPET_SIZE) + ".wav", "rb");
+    std::string tmp = "/audio/raw_" + std::to_string(SNIPPET_SIZE) + "ms.wav";
+    fin_enc = fopen(tmp.c_str(), "rb");
     if (fin_enc == NULL) {
         std::cerr << "Failed to open raw audio file!" << std::endl;
         return 1;

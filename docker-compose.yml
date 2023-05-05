@@ -6,6 +6,7 @@ services:
       dockerfile: ./caller/Dockerfile
     volumes:
       - ./caller:/home/app/pirates:z
+      - ./audio:/audio:z
     cap_add:
       - NET_ADMIN
     networks:
