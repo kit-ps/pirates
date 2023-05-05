@@ -25,7 +25,7 @@ using boost::asio::ip::tcp;
 std::string CLIENT_IP = "";
 std::string MASTER_IP = "";
 std::string RELAY_IP = "";
-int MESSAGE_SIZE;
+int SNIPPET_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
                 RELAY_IP = std::string(optarg);
                 break;
             case 's':
-                MESSAGE_SIZE = std::stoi(optarg);
+                SNIPPET_SIZE = std::stoi(optarg);
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
@@ -96,8 +96,12 @@ int main(int argc, char **argv) {
     std::cout << "Encoding voice snippet ..." << std::endl;
     // Input and output files for input and encoded audio
     FILE *fin_enc, *fout_enc, *fin_dec, *fout_dec;
-    fin_enc = fopen("/home/app/LPCNet/wav/birch.wav", "rb");
-    fout_enc = fopen("/home/app/pirates/birch_encoded", "wb");
+    fin_enc = fopen("/home/app/pirates/audio/raw_" + SNIPPET_SIZE + ".wav", "rb");
+    if (fin_enc == NULL) {
+        std::cerr << "Failed to open raw audio file!" << std::endl;
+        return 1;
+    }
+    fout_enc = fopen("/home/app/pirates/raw_encoded", "wb");
     
     // direct_split = 0
     LPCNetFreeDV *lf = lpcnet_freedv_create(0);
