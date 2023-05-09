@@ -31,7 +31,7 @@ int NUM_ROUNDS;
 int GROUP_SIZE;
 
 int main(int argc, char **argv) {
-    std::cout << "Starting PIRATES client ..." << std::endl;
+    std::cout << "Starting PIRATES caller ..." << std::endl;
     int c;
     while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
         switch(c) {
@@ -115,10 +115,12 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to read voice data into vector" << std::endl;
         return 1;
     }
+
+    //std::cout << std::string(voiceData) << std::endl;
     
     // Create a connection to the relay
     rpc::client client(RELAY_IP, 8080);
-    std::this_thread::sleep_for(std::chrono::seconds(4));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     // Call the remote procedure to send the file
     client.call("sendVoice", voiceData);
 

@@ -7,11 +7,9 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <openssl/aes.h>
 #include "seal/seal.h"
 #include <fstream>
-#include <boost/asio.hpp>
 #include <stack>
 #include <rpc/server.h>
 #include <rpc/client.h>
@@ -64,12 +62,8 @@ void *gen_keys(void *thread_id);
 void *pir(void *thread_id);
 void *preprocess_db(void *thread_id);
 
-void receiveVoicePackets(const std::vector<char>& fileData) {
-    int i = 0;
-    raw_db = new char[RAW_DB_SIZE];
-    for (i; i < RAW_DB_SIZE; i++) {
-        raw_db[i] = fileData[i % fileData.size()];
-    }
+void receiveVoicePackets(std::string raw_db) {
+	std::cout << raw_db << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -114,13 +108,9 @@ int main(int argc, char **argv) {
     // Create an RPC server
     rpc::server server(WORKER_IP, 8080);
 
-    raw_db = new char[RAW_DB_SIZE];
-    for (int i = 0; i < RAW_DB_SIZE; i++)
-    {
-        raw_db[i] = 100 + i & 127;
     // Bind the sendVoice function to a remote procedure
-    } 
-    
+    server.bind("receiveVoicePackets", receiveVoicePackets);
+    server.run();
     // Close log file
     logFile.close();
     return 0;

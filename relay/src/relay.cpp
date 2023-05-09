@@ -15,21 +15,29 @@
 #include<rpc/server.h>
 #include<rpc/client.h>
 
+#define RAW_DB_SIZE 1024
+
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
 int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
+char *raw_db;
 
-void forwardVoice(const std::vector<char>& fileData, int otherClients) {
+void forwardVoice(const std::vector<char>& voiceData) {
+    std::cout << "Started forwarding" << std::endl;
     rpc::client client(WORKER_IP, 8080);
+    std::cout << "Defined client for worker" << std::endl;
     // Call the remote procedure to send the file
-    client.call("sendVoice", voiceData);
+    raw_db = new char[RAW_DB_SIZE];
+    //std::cout << voiceData << std::endl;
     int i = 0;
-    for (i; i < otherClients; i++) {
-        client.call("sendVoice", voiceData);
+    for (i; i < RAW_DB_SIZE; i++) {
+    	raw_db[i] = voiceData[i % voiceData.size()];
     }
+    //std::cout << std::string(raw_db) << std::endl;
+    client.call("receiveVoicePackets", std::string(raw_db));
 }
 
 void sendVoice(const std::vector<char>& fileData) {
@@ -51,7 +59,7 @@ void sendVoice(const std::vector<char>& fileData) {
     fclose(file);
 
     std::cout << "Voice packet received" << std::endl;
-    forwardVoice(fileData, NUM_MESSAGE);
+    forwardVoice(fileData);
 }
 
 int main(int argc, char **argv) {
