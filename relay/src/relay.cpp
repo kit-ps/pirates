@@ -15,7 +15,7 @@
 #include<rpc/server.h>
 #include<rpc/client.h>
 
-#define RAW_DB_SIZE 1024
+#define RAW_DB_SIZE 2288 * 64
 
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
@@ -23,8 +23,23 @@ int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
-char *raw_db;
+//char *raw_db;
 
+/// 1. Receive snippet from client 
+/// 2. Extend snippet to database
+/// 3. Relay database to worker
+void process(const std::vector<char>& snippet) {
+    
+    std::cout << "Hi from relay" << std::endl;
+    std::vector<char> raw_db;
+    for (int i = 0; i < RAW_DB_SIZE; i++) {
+        raw_db[i] = snippet[i % snippet.size()];
+    }
+
+    rpc::client client(WORKER_IP, 8080);
+    client.call("process", raw_db);
+}
+/*
 void forwardVoice(const std::vector<char>& voiceData) {
     std::cout << "Started forwarding" << std::endl;
     rpc::client client(WORKER_IP, 8080);
@@ -61,6 +76,7 @@ void sendVoice(const std::vector<char>& fileData) {
     std::cout << "Voice packet received" << std::endl;
     forwardVoice(fileData);
 }
+*/
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES relay ..." << std::endl;
@@ -95,8 +111,8 @@ int main(int argc, char **argv) {
     // Create an RPC server
     rpc::server server(RELAY_IP, 8080);
 
-    // Bind the sendVoice function to a remote procedure
-    server.bind("sendVoice", sendVoice);
+    // Bind the relay function to a remote procedure
+    server.bind("process", process);
 
     // Run the server
     //server.async_run(1);

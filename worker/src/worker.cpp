@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@ using namespace seal;
 #define PLAIN_MODULUS 270337
 #define NUM_CT_PER_QUERY (2 * (NUM_MESSAGE / N))
 #define SUBROUND_TIME 480 // In miliseconds
-#define RAW_DB_SIZE (MESSAGE_SIZE * NUM_MESSAGE)
+#define RAW_DB_SIZE 2280 * 64
 #define SERVER_PACKET_SIZE (8 * 1024)
 #define CLIENT_PACKET_SIZE (64 * 1024)
 #define CT_SIZE (2 * 8 * N) //In Bytes
@@ -44,7 +45,7 @@ int NUM_ROUNDS;
 int NUM_CLIENT;
 int GROUP_SIZE;
 int NUM_THREAD = 0;
-char *raw_db;
+//char *raw_db;
 
 Ciphertext **query;
 Ciphertext *result;
@@ -58,12 +59,46 @@ std::shared_ptr<seal::SEALContext> context;
 KeyGenerator *keygen;
 SecretKey secret_key;
 
-void *gen_keys(void *thread_id);
-void *pir(void *thread_id);
-void *preprocess_db(void *thread_id);
+//void *gen_keys(void *thread_id);
+//void *pir(void *thread_id);
+//void *preprocess_db(void *thread_id);
 
-void receiveVoicePackets(std::string raw_db) {
-	std::cout << raw_db << std::endl;
+/// Preprocess the raw database received from the relay
+/// to prepare for answering PIR requests.
+std::vector<char> preprocess_db(std::vector<char> raw_db) {
+    // TODO
+    return raw_db;
+}
+
+/// Compute a single PIR reply on the preprocessed db
+std::vector<char> compute_pir_reply(std::vector<char> preprocessed_db) {
+    // TODO
+    return {'a', 'b', 'c', 'd', 'e'};
+}
+void process(const std::vector<char>& raw_db) {
+    
+    std::cout << "Hi from worker" << std::endl;
+
+    // 1. Preprocess raw database
+    std::vector<char> preprocessed_db = preprocess_db(raw_db);
+
+    // 2. Select a random index within all clients for the callee
+    std::random_device rd;  // a seed source for the random number engine
+    std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> distrib(1, NUM_CLIENT);
+    int callee_index = distrib(gen);
+
+    // 3. Generate GROUP_SIZE PIR answers up to callee index
+    for (int j = 0; j < callee_index; j++) {
+        std::vector<char> replies;
+        for (int k = 0; k < GROUP_SIZE; k++) {
+            std::vector<char> rep = compute_pir_reply(preprocessed_db);
+            replies.insert(std::end(replies), std::begin(rep), std::end(rep));
+        }
+    }
+
+    // 4. Send replies to callee
+    // TODO
 }
 
 int main(int argc, char **argv) {
@@ -109,7 +144,7 @@ int main(int argc, char **argv) {
     rpc::server server(WORKER_IP, 8080);
 
     // Bind the sendVoice function to a remote procedure
-    server.bind("receiveVoicePackets", receiveVoicePackets);
+    server.bind("process", process);
     server.run();
     // Close log file
     logFile.close();

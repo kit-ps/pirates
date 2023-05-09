@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
     fseek(encoded_snippet, 0, SEEK_END);
     long fileSize = ftell(encoded_snippet);
     fseek(encoded_snippet, 0, SEEK_SET);
+    std::cout << "Voice data file size: " << fileSize << std::endl;
     // Read the file contents into a vector
     std::vector<char> voiceData(fileSize);
     if (fread(voiceData.data(), 1, fileSize, encoded_snippet) != fileSize) {
@@ -116,13 +117,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    //std::cout << std::string(voiceData) << std::endl;
-    
     // Create a connection to the relay
     rpc::client client(RELAY_IP, 8080);
     std::this_thread::sleep_for(std::chrono::seconds(10));
     // Call the remote procedure to send the file
-    client.call("sendVoice", voiceData);
+    client.call("process", voiceData);
 
     return 0;
 }
