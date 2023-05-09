@@ -33,7 +33,7 @@ void process(const std::vector<char>& snippet) {
     std::cout << "Hi from relay" << std::endl;
     std::vector<char> raw_db;
     for (int i = 0; i < RAW_DB_SIZE; i++) {
-        raw_db[i] = snippet[i % snippet.size()];
+        raw_db.push_back(snippet[i % snippet.size()]);
     }
 
     rpc::client client(WORKER_IP, 8080);
