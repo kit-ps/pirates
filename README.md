@@ -41,9 +41,10 @@ Therefore, we only test Pirates to see if the architecture can support low-laten
 
 ### Setup 
 
-To test Pirates' MTE latency, we set up a client, a master, a relay, and a worker.
-The client acts as both sender and receiver of a test message.
-Data and requests for additional clients are precomputed and used to simulate additional load on the master/relay/worker in a repeatable and efficient manner.
+To test Pirates' MTE latency, we set up two client, a relay, and a worker.
+One client acts as the sender (caller), the other as the receiver (callee).
+
+Data and requests for additional clients are precomputed and used to simulate additional load on the relay/worker in a repeatable and efficient manner.
 In Section 8.3, we determined that a good ratio between relays and workers is 1:20 (one relay for every 20 workers).
 So we use the same ratio here (which determines how much data the single relay has to forward).
 To be consistent with Addra's evaluation, we assume 80 workers, 4 relays, and one master (only one of each is actually run).

@@ -22,10 +22,14 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
-void forwardVoice(const std::vector<char>& fileData) {
+void forwardVoice(const std::vector<char>& fileData, int otherClients) {
     rpc::client client(WORKER_IP, 8080);
     // Call the remote procedure to send the file
     client.call("sendVoice", voiceData);
+    int i = 0;
+    for (i; i < otherClients; i++) {
+        client.call("sendVoice", voiceData);
+    }
 }
 
 void sendVoice(const std::vector<char>& fileData) {
@@ -47,7 +51,7 @@ void sendVoice(const std::vector<char>& fileData) {
     fclose(file);
 
     std::cout << "Voice packet received" << std::endl;
-    forwardVoice(fileData);
+    forwardVoice(fileData, NUM_MESSAGE);
 }
 
 int main(int argc, char **argv) {

@@ -64,6 +64,14 @@ void *gen_keys(void *thread_id);
 void *pir(void *thread_id);
 void *preprocess_db(void *thread_id);
 
+void receiveVoicePackets(const std::vector<char>& fileData) {
+    int i = 0;
+    raw_db = new char[RAW_DB_SIZE];
+    for (i; i < RAW_DB_SIZE; i++) {
+        raw_db[i] = fileData[i % fileData.size()];
+    }
+}
+
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES worker ..." << std::endl;
     int c;
@@ -100,12 +108,18 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to open log file!" << std::endl;
         return 1;
     }
+    // Create database
+    //raw_db = new
     // Receive data from relay
     // Create an RPC server
     rpc::server server(WORKER_IP, 8080);
 
+    raw_db = new char[RAW_DB_SIZE];
+    for (int i = 0; i < RAW_DB_SIZE; i++)
+    {
+        raw_db[i] = 100 + i & 127;
     // Bind the sendVoice function to a remote procedure
-    server.bind("pir", pir);
+    } 
     
     // Close log file
     logFile.close();
@@ -113,6 +127,7 @@ int main(int argc, char **argv) {
 }
 
 // Taken from Addra
+/*
 void *pir(void *thread_id) {  
 
     Ciphertext column_sum, temp_ct;
@@ -245,3 +260,4 @@ void *preprocess_db(void *thread_id) {
 
     return 0;
 }
+*/
