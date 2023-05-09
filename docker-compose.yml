@@ -19,36 +19,57 @@ services:
       -s ${MESSAGE_SIZE}
       -r ${NUM_ROUNDS}
       -e ${IP_RELAY}"
-  #worker:
-  #  build:
-  #    context: ./
-  #    dockerfile: ./worker/Dockerfile
-  #  volumes:
-  #    - ./worker:/home/app/pirates:z
-  #  cap_add:
-  #    - NET_ADMIN
-  #  networks:
-  #    pirates-network:
-  #      ipv4_address: ${IP_WORKER}
-  #  command: >
-  #    bash -c "cd /home/app/pirates
-  #    && cmake . && make &&
-  #    ./bin/worker -w ${IP_WORKER}"
-  #relay:
-  #  build:
-  #    context: ./
-  #    dockerfile: ./relay/Dockerfile
-  #  volumes:
-  #    - ./relay:/home/app/pirates:z
-  #  cap_add:
-  #    - NET_ADMIN
-  #  networks:
-  #    pirates-network:
-  #      ipv4_address: ${IP_RELAY}
-  #  command: >
-  #    bash -c "cd /home/app/pirates
-  #    && cmake . && make &&
-  #    ./bin/relay"
+  callee:
+    build:
+      context: ./
+      dockerfile: ./callee/Dockerfile
+    volumes:
+      - /callee:/home/app/pirates:z
+  #    - ./audio:/audio:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_CALLEE}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/callee -c ${IP_CALLEE}
+      -s ${MESSAGE_SIZE}
+      -r ${NUM_ROUNDS}
+      -e ${IP_RELAY}"
+  worker:
+    build:
+      context: ./
+      dockerfile: ./worker/Dockerfile
+    volumes:
+      - ./worker:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_WORKER}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/worker -w ${IP_WORKER}"
+  relay:
+    build:
+      context: ./
+      dockerfile: ./relay/Dockerfile
+    volumes:
+      - ./relay:/home/app/pirates:z
+    cap_add:
+      - NET_ADMIN
+    networks:
+      pirates-network:
+        ipv4_address: ${IP_RELAY}
+    command: >
+      bash -c "cd /home/app/pirates
+      && cmake . && make &&
+      ./bin/relay -e ${IP_RELAY}
+      -w ${IP_WORKER}
+      -n ${NUM_MESSAGe}"
 networks:
   pirates-network:
     ipam:

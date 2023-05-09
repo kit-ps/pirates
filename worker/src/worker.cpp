@@ -12,10 +12,11 @@
 #include "seal/seal.h"
 #include <fstream>
 #include <boost/asio.hpp>
-#include<stack>
+#include <stack>
+#include <rpc/server.h>
+#include <rpc/client.h>
 
 using namespace seal;
-using boost::asio::ip::tcp;
 
 #define N 4096
 #define PLAIN_BIT 19
@@ -100,39 +101,12 @@ int main(int argc, char **argv) {
         return 1;
     }
     // Receive data from relay
-    boost::asio::io_context io_context;
-    // Create a TCP acceptor to listen for incoming connections.
-    tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 8080));
-    // Wait for incoming connection(s) and handle them.
-    while (true) {
-        tcp::socket socket(io_context);
-        acceptor.accept(socket);
-        std::cout << "Received connection from " << socket.remote_endpoint().address().to_string() << ":" << socket.remote_endpoint().port() << std::endl;
-        // Do something with the incoming connection here.
-        // Open the file
-        std::string file_name = "/home/app/forwarded_audio";
-        std::ofstream file(file_name, std::ios::binary);
+    // Create an RPC server
+    rpc::server server(WORKER_IP, 8080);
 
-        if (!file) {
-            std::cerr << "Could not create file " << file_name << std::endl;
-            return 1;
-        }
-        // Receive the file size from the client
-        size_t file_size;
-        boost::asio::read(socket, boost::asio::buffer(&file_size, sizeof(file_size)));
-
-        // Receive the file from the client
-        char buffer[1024];
-        size_t total_received = 0;
-        while (total_received < file_size) {
-            size_t received = socket.read_some(boost::asio::buffer(buffer, std::min(file_size - total_received, sizeof(buffer))));
-            total_received += received;
-        }
-
-        // Close the file and the socket
-        file.close();
-        socket.close();
-    }
+    // Bind the sendVoice function to a remote procedure
+    server.bind("pir", pir);
+    
     // Close log file
     logFile.close();
     return 0;

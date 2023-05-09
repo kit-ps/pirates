@@ -3,6 +3,11 @@ caller/CMakeCache.txt
 caller/Makefile
 caller/bin/*
 caller/client_log.txt
+callee/CMakeFiles
+callee/CMakeCache.txt
+callee/Makefile
+callee/bin/*
+callee/client_log.txt
 master/CMakeFiles
 master/CMakeCache.txt
 master/Makefile

@@ -8,4 +8,6 @@ RUN cd /home/app/SEAL && cmake . -DBUILD_SHARED_LIBS=ON -DCMAKE_VERBOSE_MAKEFILE
 RUN cd /home/app/SEAL && make && sudo make install
 RUN git clone https://github.com/drowe67/LPCNet.git /home/app/LPCNet
 RUN cd /home/app/LPCNet && mkdir build_linux && cd build_linux && cmake .. && make && make install
+RUN git clone https://github.com/rpclib/rpclib.git /home/app/rpclib
+RUN cd /home/app/rpclib && cmake . && make && sudo make install
 RUN mkdir -p /home/app/pirates

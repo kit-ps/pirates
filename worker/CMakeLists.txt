@@ -8,4 +8,4 @@ find_package(SEAL 3.5 REQUIRED)
 find_library(lpcnetfreedv lpcnetfreedv)
 
 add_executable(worker ./src/worker.cpp)
-target_link_libraries(worker SEAL::seal crypto lpcnetfreedv)
+target_link_libraries(worker SEAL::seal crypto lpcnetfreedv rpc)

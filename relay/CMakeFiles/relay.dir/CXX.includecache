@@ -35,7 +35,9 @@ seal/seal.h
 /home/app/pirates/src/seal/seal.h
 fstream
 -
-boost/asio.hpp
+rpc/server.h
+-
+rpc/client.h
 -
 
 /usr/local/include/SEAL-3.5/gsl/gsl_assert
