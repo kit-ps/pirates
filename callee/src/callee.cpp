@@ -37,7 +37,7 @@ std::vector<char> decrypt_reply(std::vector<char> rep) {
     return rep;
 }
 
-std::vector<char> decode_reply(std::vector<char> rep) {
+std::vector<short> decode_reply(std::vector<char> rep) {
     // Taken from lpcnet_dec.c
     int nbits = 0, nerrs = 0;
     // Default in lpcnet_dec is 0.0
@@ -52,27 +52,23 @@ std::vector<char> decode_reply(std::vector<char> rep) {
     char frame[lpcnet_bits_per_frame(lf)];
     short pcm[lpcnet_samples_per_frame(lf)];
 
+    std::vector<short> decoded_snippet;
 
-    do {
-        for(int i = 0; i < )
-        bits_read = fread(frame, sizeof(char), lpcnet_bits_per_frame(lf), fin_dec);
-        nbits += ber_en - ber_st;
-        if (ber != 0.0) {
-            int i;
-            for(i=ber_st; i<=ber_en; i++) {
-                float r = (float)rand()/RAND_MAX;
-                if (r < ber) {
-                    frame[i] = (frame[i] ^ 1) & 0x1;
-                    nerrs++;
-                }
-            }
-        }            
+    int num_frames = rep.size() / lpcnet_bits_per_frame(lf);
+    for (int i = 0; i < num_frames; i++) {
+        // copy from reply vector into frame
+        std::copy(
+                rep.begin() + i * lpcnet_bits_per_frame(lf),
+                rep.begin() + (i+1) * lpcnet_bits_per_frame(lf), 
+                frame);
 
         lpcnet_dec(lf,frame,pcm);
-        fwrite(pcm, sizeof(short), lpcnet_samples_per_frame(lf), fout_dec);
+        for (short s : pcm) {
+            decoded_snippet.push_back(s);
+        }
     }
-    // TODO
-    return rep;
+
+    return decoded_snippet;
 }
 
 void process(const std::vector<char>& replies) {
@@ -97,7 +93,7 @@ void process(const std::vector<char>& replies) {
         rep = decrypt_reply(rep);
 
         // LPCNet decode reply
-        rep = decode_reply(rep);
+        std::vector<short> decoded_snippet = decode_reply(rep);
     }
 }
 
