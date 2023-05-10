@@ -27,15 +27,51 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
-void process(const std::vector<char>& replies) {
-    std::cout << "Hi from callee ..." << std::endl;
+std::vector<char> process_reply(std::vector<char> rep) {
+    // TODO
+    return rep;
+}
 
+std::vector<char> decrypt_reply(std::vector<char> rep) {
+    // TODO
+    return rep;
+}
+
+std::vector<char> decode_reply(std::vector<char> rep) {
+    // TODO
+    return rep;
+}
+
+void process(const std::vector<char>& replies) {
+    std::cout << "Hi from callee" << std::endl;
+
+    // Compute size of single reply
+    int rep_size = replies.size() / GROUP_SIZE; 
+
+    std::cout << "Rep size: " << rep_size << std::endl;
+
+    std::vector<char> rep;
+    for (int i = 0; i < GROUP_SIZE; i++) {
+        // get current reply from replies.
+        rep = std::vector<char>(
+                replies.begin() + i * rep_size, 
+                replies.begin() + (i + 1) * rep_size); 
+
+        // PIR process reply
+        rep = process_reply(rep);
+        
+        // AES decrypt reply
+        rep = decrypt_reply(rep);
+
+        // LPCNet decode reply
+        rep = decode_reply(rep);
+    }
 }
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES client ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
+    while ((c = getopt(argc, argv, "c:m:s:n:r:e:g:")) != -1) {
         switch(c) {
             case 'c':
                 CALLEE_IP = std::string(optarg);
@@ -49,6 +85,9 @@ int main(int argc, char **argv) {
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
+                break;
+            case 'g':
+                GROUP_SIZE = std::stoi(optarg);
                 break;
             default:
                 abort();

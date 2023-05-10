@@ -37,7 +37,8 @@ services:
       ./bin/callee -c ${IP_CALLEE}
       -s ${MESSAGE_SIZE}
       -r ${NUM_ROUNDS}
-      -e ${IP_RELAY}"
+      -e ${IP_RELAY}
+      -g ${GROUP_SIZE}"
   worker:
     build:
       context: ./
