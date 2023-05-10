@@ -98,9 +98,22 @@ int main(int argc, char **argv) {
 
     // Create a connection to the relay
     rpc::client client(RELAY_IP, 8080);
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
+    // Retry connection until the server is available
+    bool success = false;
+    while (!success) {
+        try {
+            // Attempt to connect to the server
+            client.call("process", encoded_snippet);
+            success = true;
+        } catch (const std::exception& e) {
+            // Connection failed, sleep for a while before retrying
+            std::cout << "Retrying" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
     // Call the remote procedure to send the file
-    client.call("process", encoded_snippet);
+    //client.call("process", encoded_snippet);
 
     return 0;
 }
