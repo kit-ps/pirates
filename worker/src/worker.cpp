@@ -37,7 +37,7 @@ using namespace seal;
 #define WORKER_PORT 2199
 #define CLIENT_PORT 2000
 
-std::string RELAY_IP = "";
+std::string CALLEE_IP = "";
 std::string WORKER_IP = "";
 int MESSAGE_SIZE;
 int NUM_MESSAGE;
@@ -89,8 +89,9 @@ void process(const std::vector<char>& raw_db) {
     int callee_index = distrib(gen);
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
+    std::vector<char> replies;
     for (int j = 0; j < callee_index; j++) {
-        std::vector<char> replies;
+        replies = {};
         for (int k = 0; k < GROUP_SIZE; k++) {
             std::vector<char> rep = compute_pir_reply(preprocessed_db);
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
@@ -98,19 +99,20 @@ void process(const std::vector<char>& raw_db) {
     }
 
     // 4. Send replies to callee
-    // TODO
+    rpc::client client(CALLEE_IP, 8080);
+    client.call("process", replies);
 }
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES worker ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "m:w:s:n:r:g:")) != -1) {
+    while ((c = getopt(argc, argv, "c:w:s:n:r:g:")) != -1) {
         switch(c) {
-            case 'e':
-                RELAY_IP = std::string(optarg);
-                break;
             case 'w':
                 WORKER_IP = std::string(optarg);
+                break;
+            case 'c':
+                CALLEE_IP = std::string(optarg);
                 break;
             case 'n':
                 NUM_MESSAGE = std::stoi(optarg);

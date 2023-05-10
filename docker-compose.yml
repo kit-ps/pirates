@@ -52,7 +52,7 @@ services:
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/worker -w ${IP_WORKER}"
+      ./bin/worker -w ${IP_WORKER} -c ${IP_CALLEE}"
   relay:
     build:
       context: ./

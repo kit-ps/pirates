@@ -28,6 +28,11 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
+void process(const std::vector<char>& replies) {
+    std::cout << "Hi from callee ..." << std::endl;
+
+}
+
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES client ..." << std::endl;
     int c;
@@ -51,11 +56,25 @@ int main(int argc, char **argv) {
         }
     }
     // Create a file for logging
-    std::ofstream logFile("client_log.txt");
+    std::ofstream logFile("callee_log.txt");
     if (!logFile) {
         std::cerr << "Failed to open log file!" << std::endl;
         return 1;
     }
+    // Create an RPC server
+    rpc::server server(CALLEE_IP, 8080);
+
+    // Bind the process function to a remote procedure
+    server.bind("process", process);
+
+    // Run the server
+    //server.async_run(1);
+    server.run();
+    // Close log file
+    logFile.close();
+    return 0;
+    
+    /*
     //////////////////////////////////////////// LPCNET DECODING ////////////////////////////////////////////
     
     std::cout << "Decoding voice snippet ..." << std::endl;
@@ -98,4 +117,5 @@ int main(int argc, char **argv) {
     std::cout << "Needed time for LPCNet decoding: " << duration.count() << "\u03bcs\n";
     logFile.close();
     return 0;
+    */
 }
