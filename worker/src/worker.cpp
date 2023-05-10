@@ -106,7 +106,7 @@ void process(const std::vector<char>& raw_db) {
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES worker ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "c:w:s:n:r:g:")) != -1) {
+    while ((c = getopt(argc, argv, "c:w:s:n:r:g:u:")) != -1) {
         switch(c) {
             case 'w':
                 WORKER_IP = std::string(optarg);

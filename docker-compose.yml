@@ -24,7 +24,7 @@ services:
       context: ./
       dockerfile: ./callee/Dockerfile
     volumes:
-      - /callee:/home/app/pirates:z
+      - ./callee:/home/app/pirates:z
   #    - ./audio:/audio:z
     cap_add:
       - NET_ADMIN
@@ -52,7 +52,11 @@ services:
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/worker -w ${IP_WORKER} -c ${IP_CALLEE}"
+      ./bin/worker 
+      -w ${IP_WORKER} 
+      -c ${IP_CALLEE}
+      -g ${GROUP_SIZE}
+      -u ${NUM_USERS}"
   relay:
     build:
       context: ./

@@ -17,10 +17,9 @@
 #include "seal/seal.h"
 #include "lpcnet/lpcnet_freedv.h"
 #include <fstream>
+#include <rpc/server.h>
 
-using boost::asio::ip::tcp;
-
-std::string CLIENT_IP = "";
+std::string CALLEE_IP = "";
 std::string MASTER_IP = "";
 std::string RELAY_IP = "";
 int MESSAGE_SIZE;
@@ -39,8 +38,8 @@ int main(int argc, char **argv) {
     while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
         switch(c) {
             case 'c':
-                CLIENT_IP = std::string(optarg);
-                std::cout << "Callee IP is " << CLIENT_IP << std::endl;
+                CALLEE_IP = std::string(optarg);
+                std::cout << "Callee IP is " << CALLEE_IP << std::endl;
                 break;
             case 'e':
                 RELAY_IP = std::string(optarg);
