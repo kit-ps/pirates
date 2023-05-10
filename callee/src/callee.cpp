@@ -46,12 +46,12 @@ void process(const std::vector<char>& replies) {
     std::cout << "Hi from callee" << std::endl;
 
     // Compute size of single reply
-    int rep_size = replies.size() / GROUP_SIZE; 
+    int rep_size = replies.size() / GROUP_SIZE - 1; 
 
     std::cout << "Rep size: " << rep_size << std::endl;
 
     std::vector<char> rep;
-    for (int i = 0; i < GROUP_SIZE; i++) {
+    for (int i = 0; i < GROUP_SIZE - 1; i++) {
         // get current reply from replies.
         rep = std::vector<char>(
                 replies.begin() + i * rep_size, 

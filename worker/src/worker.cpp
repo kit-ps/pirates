@@ -92,7 +92,7 @@ void process(const std::vector<char>& raw_db) {
     std::vector<char> replies;
     for (int j = 0; j < callee_index; j++) {
         replies = {};
-        for (int k = 0; k < GROUP_SIZE; k++) {
+        for (int k = 0; k < GROUP_SIZE - 1; k++) {
             std::vector<char> rep = compute_pir_reply(preprocessed_db);
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
         }
