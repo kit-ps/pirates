@@ -91,7 +91,8 @@ int main(int argc, char **argv) {
     // Stop measuring time
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Needed time for LPCNet encoding: " << duration.count() << "\u03bcs\n";
+    //std::cout << "Needed time for LPCNet encoding: " << duration.count() << "\u03bcs\n";
+    std::cout << "Needed time for LPCNet encoding: " << duration.count() << "mus" << std::endl;
      // Close files for encoding
     fclose(input_file);
 
@@ -101,6 +102,5 @@ int main(int argc, char **argv) {
     // Call the remote procedure to send the file
     client.call("process", encoded_snippet);
 
-    std::cout << "Caller goodbye ..." << std::endl;
     return 0;
 }
