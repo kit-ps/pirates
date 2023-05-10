@@ -19,12 +19,12 @@ using namespace seal;
 
 #define N 4096
 #define PLAIN_BIT 19
-#define COEFF_MODULUS_54 18014398509309953UL
+#define COEFF_MODULUS_54 18014398509289953UL
 #define COEFF_MODULUS_55 36028797018652673UL
 #define PLAIN_MODULUS 270337
 #define NUM_CT_PER_QUERY (2 * (NUM_MESSAGE / N))
 #define SUBROUND_TIME 480 // In miliseconds
-#define RAW_DB_SIZE 2280 * 64
+#define RAW_DB_SIZE 2280 * 64   
 #define SERVER_PACKET_SIZE (8 * 1024)
 #define CLIENT_PACKET_SIZE (64 * 1024)
 #define CT_SIZE (2 * 8 * N) //In Bytes
@@ -33,12 +33,20 @@ using namespace seal;
 
 #define NTT_NUM_THREAD 8
 
-#define MASTER_PORT 3000
+#define MASTER_PORT 2800
 #define WORKER_PORT 2199
 #define CLIENT_PORT 2000
 
-std::string CALLEE_IP = "";
+unsigned int NUM_COLUMNS;
+int DB_ROWS;
+
+pthread_t *threads;
+pthread_t ntt_threads[NTT_NUM_THREAD];
+int *thread_id;
+
+std::string RELAY_IP = "";
 std::string WORKER_IP = "";
+std::string CALLEE_IP = "";
 int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
@@ -75,6 +83,7 @@ std::vector<char> compute_pir_reply(std::vector<char> preprocessed_db) {
     // TODO
     return {'a', 'b', 'c', 'd', 'e'};
 }
+
 void process(const std::vector<char>& raw_db) {
     
     std::cout << "Hi from worker" << std::endl;
@@ -139,6 +148,24 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to open log file!" << std::endl;
         return 1;
     }
+    // Number of columns for the database
+    NUM_COLUMNS = (ceil((double)(MESSAGE_SIZE * 4) / (PLAIN_BIT - 1)) * 2);
+    // Number of rows
+    DB_ROWS = (NUM_CT_PER_QUERY * (NUM_COLUMNS/2));
+    // Create threats for calculating the PIR answer
+    threads = new pthread_t [NUM_THREAD];
+    thread_id = new int[NUM_THREAD];
+    srand(time(NULL));
+    EncryptionParameters parms(scheme_type::BFV);
+    parms.set_poly_modulus_degree(N);
+    parms.set_coeff_modulus({COEFF_MODULUS_54, COEFF_MODULUS_55});
+    parms.set_plain_modulus(PLAIN_MODULUS);
+    context = SEALContext::Create(parms);
+
+    //batch_encoder = new BatchEncoder(context);
+    //evaluator = new Evaluator(context);
+    //encoded_db = new Plaintext[DB_ROWS];
+    //result = new Ciphertext[NUM_CLIENT];
     // Create database
     //raw_db = new
     // Receive data from relay
