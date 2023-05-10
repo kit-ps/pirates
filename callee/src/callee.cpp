@@ -38,6 +38,39 @@ std::vector<char> decrypt_reply(std::vector<char> rep) {
 }
 
 std::vector<char> decode_reply(std::vector<char> rep) {
+    // Taken from lpcnet_dec.c
+    int nbits = 0, nerrs = 0;
+    // Default in lpcnet_dec is 0.0
+    float ber = 0.0;
+    // Default in lpcnet_dec is -1
+    int ber_en = -1;
+    // Default in lpcnet_dec is 0
+    int ber_st = 0;
+    // We decode
+    LPCNetFreeDV *lf = lpcnet_freedv_create(0);
+    // Taken from lpcnet_enc.c
+    char frame[lpcnet_bits_per_frame(lf)];
+    short pcm[lpcnet_samples_per_frame(lf)];
+
+
+    do {
+        for(int i = 0; i < )
+        bits_read = fread(frame, sizeof(char), lpcnet_bits_per_frame(lf), fin_dec);
+        nbits += ber_en - ber_st;
+        if (ber != 0.0) {
+            int i;
+            for(i=ber_st; i<=ber_en; i++) {
+                float r = (float)rand()/RAND_MAX;
+                if (r < ber) {
+                    frame[i] = (frame[i] ^ 1) & 0x1;
+                    nerrs++;
+                }
+            }
+        }            
+
+        lpcnet_dec(lf,frame,pcm);
+        fwrite(pcm, sizeof(short), lpcnet_samples_per_frame(lf), fout_dec);
+    }
     // TODO
     return rep;
 }
