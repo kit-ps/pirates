@@ -37,9 +37,6 @@ using namespace seal;
 #define WORKER_PORT 2199
 #define CLIENT_PORT 2000
 
-<<<<<<< Updated upstream
-std::string CALLEE_IP = "";
-=======
 unsigned int NUM_COLUMNS;
 int DB_ROWS;
 
@@ -48,8 +45,8 @@ pthread_t ntt_threads[NTT_NUM_THREAD];
 int *thread_id;
 
 std::string RELAY_IP = "";
->>>>>>> Stashed changes
 std::string WORKER_IP = "";
+std::string CALLEE_IP = "";
 int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
@@ -158,16 +155,17 @@ int main(int argc, char **argv) {
     // Create threats for calculating the PIR answer
     threads = new pthread_t [NUM_THREAD];
     thread_id = new int[NUM_THREAD];
+    srand(time(NULL));
     EncryptionParameters parms(scheme_type::BFV);
     parms.set_poly_modulus_degree(N);
     parms.set_coeff_modulus({COEFF_MODULUS_54, COEFF_MODULUS_55});
     parms.set_plain_modulus(PLAIN_MODULUS);
     context = SEALContext::Create(parms);
 
-    batch_encoder = new BatchEncoder(context);
-    evaluator = new Evaluator(context);
-    encoded_db = new Plaintext[DB_ROWS];
-    result = new Ciphertext[NUM_CLIENT];
+    //batch_encoder = new BatchEncoder(context);
+    //evaluator = new Evaluator(context);
+    //encoded_db = new Plaintext[DB_ROWS];
+    //result = new Ciphertext[NUM_CLIENT];
     // Create database
     //raw_db = new
     // Receive data from relay
