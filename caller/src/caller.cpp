@@ -1,5 +1,7 @@
 #include <iostream>
 #include <chrono>
+#include <iterator>
+#include <vector>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +33,7 @@ int NUM_ROUNDS;
 int GROUP_SIZE;
 
 void process() {
+    //////////////////////////////////////////// LPCNet Encoding ////////////////////////////////////////////
     std::cout << "Encoding voice snippet ..." << std::endl;
     // Open input file
     FILE *input_file;
@@ -68,6 +71,114 @@ void process() {
      // Close files for encoding
     fclose(input_file);
 
+    //////////////////////////////////////////// AES ENCRYPTION  ////////////////////////////////////////////
+    std::cout << "Encrypting encoded voice snippet ..." << std::endl;
+    // For the moment, key taken from Addra
+    unsigned char key[]={0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF};
+    AES_KEY aes_key;
+    AES_set_encrypt_key(key, 256, &aes_key);
+    const int key_length = 256;
+    unsigned char iv[AES_BLOCK_SIZE];
+    // For now, we set the IV to 0x00
+    memset(iv, 0x00, AES_BLOCK_SIZE);
+    // Define files
+    //std::ifstream in("/home/app/encoded_audio", std::ios::binary);
+    //std::ofstream out("/home/app/encrypted_audio", std::ios::binary);
+    // Get file size
+    //in.seekg(0, std::ios::end);
+    //const auto file_size = in.tellg();
+    //in.seekg(0, std::ios::beg);
+    //unsigned char buffer[16];
+    //unsigned char encrypted_buffer[16];
+    //
+    start = std::chrono::high_resolution_clock::now();
+
+
+    
+    // copy encoded_snippet into buffer
+    std::copy(encoded_snippet.begin(), encoded_snippet.end(), buffer);
+
+    AES_cbc_encrypt(encoded_snippet.data(), encrypted_buffer, encoded_snippet.size(), &aes_key, iv, AES_ENCRYPT);
+
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Needed time for AES encryption: " << duration.count() << "mus\n";
+
+    // convert buffer to vector
+    std::vector<char> encrypted_snippet;
+    // naive because c++11 does not work :(
+    for (int i = 0; i < encoded_snippet.size(); i++) {
+        encrypted_snippet.push_back(encrypted_buffer[i]);
+    }
+    //std::vector<unsigned char> encrypted_snippet(std::begin(encrypted_buffer), std::end(encrypted_buffer));
+
+   
+    /*
+    // determine number of blocks needed 
+    int num_blocks;
+    float tmp_num_blocks = encoded_snippet.size() / AES_BLOCK_SIZE;
+    if (floorf(tmp_num_blocks) == tmp_num_blocks) {
+        // encoded snipped can be perfectly divided into blocks
+        num_blocks = static_cast<int>(tmp_num_blocks);
+    } else {
+        // padding is needed
+        num_blocks = static_cast<int>(tmp_num_blocks) + 1; 
+
+    }
+
+    unsigned char buffer[AES_BLOCK_SIZE];
+    unsigned char encrypted_buffer[AES_BLOCK_SIZE];
+    std::vector<char> encrypted_snippet;
+
+    std::cout << "Number of blocks needed: " << tmp_num_blocks << " -> " << num_blocks << std::endl;
+
+    for (int i = 0; i < num_blocks; i++) {
+        std::fill(buffer, buffer+AES_BLOCK_SIZE, '0');
+        if ((i+1)*AES_BLOCK_SIZE <= encoded_snippet.size()) {
+            // full buffer can be taken from snippet
+            std::copy(
+                    encoded_snippet.begin() + i*AES_BLOCK_SIZE,
+                    encoded_snippet.begin() + (i+1)*AES_BLOCK_SIZE,
+                    buffer
+                    );
+        } else {
+            // buffer has to be padded 
+            std::copy(
+                    encoded_snippet.begin() + i*AES_BLOCK_SIZE,
+                    encoded_snippet.end(),
+                    buffer
+                    );
+        }
+        // encrypt buffer to encrypted_buffer
+        AES_cbc_encrypt(buffer, encrypted_buffer, 16, &aes_key, iv, AES_ENCRYPT);
+
+        // append encrypted_buffer to encrypted_snippet
+        for (int j = 0; j < AES_BLOCK_SIZE; j++) {
+            encrypted_snippet.push_back(encrypted_buffer[j]);
+        }
+    }
+    */
+
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Needed time for AES encryption: " << duration.count() << "mus\n";
+    /*
+    while (in.read(reinterpret_cast<char*>(buffer), 16)) {
+        // Encrypt the 16-byte buffer and write to output file
+        AES_cbc_encrypt(buffer, encrypted_buffer, 16, &aes_key, iv, AES_ENCRYPT);
+        out.write(reinterpret_cast<const char*>(encrypted_buffer), 16);
+    }
+
+    // Add padding to the last block if necessary
+    if (in.gcount() != 0) {
+        std::fill(std::begin(buffer) + in.gcount(), std::end(buffer), 0);
+        AES_cbc_encrypt(buffer, encrypted_buffer, 16, &aes_key, iv, AES_ENCRYPT);
+        out.write(reinterpret_cast<const char*>(encrypted_buffer), 16);
+    }
+    */
+   
+
+    //////////////////////////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay
     rpc::client client(RELAY_IP, 8080);
     //std::this_thread::sleep_for(std::chrono::seconds(10));
