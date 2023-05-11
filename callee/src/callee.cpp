@@ -75,7 +75,7 @@ void process(const std::vector<char>& replies) {
     std::cout << "Hi from callee" << std::endl;
 
     // Compute size of single reply
-    int rep_size = replies.size() / GROUP_SIZE - 1; 
+    int rep_size = replies.size() / (GROUP_SIZE - 1); 
 
     std::cout << "Rep size: " << rep_size << std::endl;
 
