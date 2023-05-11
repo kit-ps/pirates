@@ -30,35 +30,7 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
-int main(int argc, char **argv) {
-    std::cout << "Starting PIRATES caller ..." << std::endl;
-    int c;
-    while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
-        switch(c) {
-            case 'c':
-                CLIENT_IP = std::string(optarg);
-                std::cout << "Caller IP is " << CLIENT_IP << std::endl;
-                break;
-            case 'e':
-                RELAY_IP = std::string(optarg);
-                break;
-            case 's':
-                SNIPPET_SIZE = std::stoi(optarg);
-                break;
-            case 'r':
-                NUM_ROUNDS = std::stoi(optarg);
-                break;
-            default:
-                abort();
-        }
-    }
-    // Create a file for logging
-    std::ofstream logFile("caller_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open caller log!" << std::endl;
-        return 1;
-    }
-    
+void process() {
     std::cout << "Encoding voice snippet ..." << std::endl;
     // Open input file
     FILE *input_file;
@@ -66,7 +38,7 @@ int main(int argc, char **argv) {
     input_file = fopen(tmp.c_str(), "rb");
     if (!input_file) {
         std::cerr << "Failed to open raw audio file!" << std::endl;
-        return 1;
+        return;
     }
 
     std::vector<char> encoded_snippet;
@@ -114,6 +86,41 @@ int main(int argc, char **argv) {
     }
     // Call the remote procedure to send the file
     //client.call("process", encoded_snippet);
+}
+
+int main(int argc, char **argv) {
+    std::cout << "Starting PIRATES caller ..." << std::endl;
+    int c;
+    while ((c = getopt(argc, argv, "c:m:s:n:r:e:")) != -1) {
+        switch(c) {
+            case 'c':
+                CLIENT_IP = std::string(optarg);
+                std::cout << "Caller IP is " << CLIENT_IP << std::endl;
+                break;
+            case 'e':
+                RELAY_IP = std::string(optarg);
+                break;
+            case 's':
+                SNIPPET_SIZE = std::stoi(optarg);
+                break;
+            case 'r':
+                NUM_ROUNDS = std::stoi(optarg);
+                break;
+            default:
+                abort();
+        }
+    }
+    // Create a file for logging
+    std::ofstream logFile("caller_log.txt");
+    if (!logFile) {
+        std::cerr << "Failed to open caller log!" << std::endl;
+        return 1;
+    }
+    
+    for (int i = 0; i < NUM_ROUNDS; i++) {
+        process();
+        //std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
 
     return 0;
 }
