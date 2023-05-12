@@ -26,6 +26,7 @@
 #include <botan/cipher_mode.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <seal/seal.h>
 
 std::string CLIENT_IP = "";
 std::string MASTER_IP = "";

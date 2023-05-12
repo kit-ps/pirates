@@ -1,15 +1,15 @@
 FROM ubuntu:22.04
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update && apt-get -y install sudo git wget cmake iputils-ping rpcbind iproute2 libc6-dev g++ libssl-dev build-essential autoconf libtool pkg-config clang cmake libboost-all-dev python3 #software-properties-common
+RUN apt-get update && apt-get -y install sudo git wget cmake iputils-ping rpcbind iproute2 libc6-dev g++ libssl-dev build-essential autoconf libtool pkg-config clang cmake libboost-all-dev python3 libbotan-2-19 libbotan-2-dev #software-properties-common
 #RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
 #RUN apt-get -y gcc-11
 
 # Botan (AES)
-RUN git clone https://github.com/randombit/botan.git /home/app/Botan
-RUN cd /home/app/Botan
-RUN python3 /home/app/Botan/configure.py --minimized-build --enable-modules=aes,cbc,auto_rng,hex --prefix="/usr/local/lib"
-RUN sudo make && sudo make install
+#RUN git clone https://github.com/randombit/botan.git /home/app/Botan
+#RUN cd /home/app/Botan
+#RUN python3 /home/app/Botan/configure.py --minimized-build --enable-modules=aes,cbc,auto_rng,hex --prefix="/usr/local/lib"
+#RUN sudo make && sudo make install
 
 # SEAL (Homomorphic Encryption)
 RUN git clone https://github.com/microsoft/SEAL.git /home/app/SEAL
