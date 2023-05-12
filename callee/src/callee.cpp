@@ -19,6 +19,11 @@
 #include "lpcnet/lpcnet_freedv.h"
 #include <fstream>
 #include <rpc/server.h>
+#include <botan/auto_rng.h>
+#include <botan/cipher_mode.h>
+#include <botan/hex.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
 
 std::string CALLEE_IP = "";
 std::string MASTER_IP = "";
@@ -28,17 +33,35 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
+/// Gets as input a PIR reply and returns the contained snippet
 std::vector<uint8_t> process_reply(std::vector<uint8_t> rep) {
     // TODO
-    return rep;
+    std::vector<uint8_t> snippet(2288, 0);
+    return snippet;
 }
 
-std::vector<uint8_t> decrypt_reply(std::vector<uint8_t> rep) {
-    // TODO
-    return rep;
+// AES-decrypts the given snippet and returns the resulting plaintext
+std::vector<uint8_t> decrypt_reply(std::vector<uint8_t> snippet) {
+    const std::vector<uint8_t> key = Botan::hex_decode("C0FFEEC0FFEC0FFEEC0FFEC0FFEEC0FF");
+
+    auto dec = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION);
+    dec->set_key(key);
+
+    // generate 0 nonce (IV)
+    Botan::secure_vector<uint8_t> iv(0, dec->default_nonce_length());
+
+    // Copy input data to a buffer that will be encrypted
+    Botan::secure_vector<uint8_t> decrypted_snippet (
+            snippet.begin(), 
+            snippet.end());
+
+    dec->start(iv);
+    dec->finish(decrypted_snippet);
+
+    return Botan::unlock(decrypted_snippet);
 }
 
-std::vector<short> decode_reply(std::vector<uint8_t> rep) {
+std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
     // Taken from lpcnet_dec.c
     int nbits = 0, nerrs = 0;
     // Default in lpcnet_dec is 0.0
@@ -55,12 +78,12 @@ std::vector<short> decode_reply(std::vector<uint8_t> rep) {
 
     std::vector<short> decoded_snippet;
 
-    int num_frames = rep.size() / lpcnet_bits_per_frame(lf);
+    int num_frames = snippet.size() / lpcnet_bits_per_frame(lf);
     for (int i = 0; i < num_frames; i++) {
         // copy from reply vector into frame
         std::copy(
-                rep.begin() + i * lpcnet_bits_per_frame(lf),
-                rep.begin() + (i+1) * lpcnet_bits_per_frame(lf), 
+                snippet.begin() + i * lpcnet_bits_per_frame(lf),
+                snippet.begin() + (i+1) * lpcnet_bits_per_frame(lf), 
                 frame);
 
         lpcnet_dec(lf,frame,pcm);
