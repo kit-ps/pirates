@@ -110,6 +110,19 @@ void process(const std::vector<uint8_t>& raw_db) {
 
     // 4. Send replies to callee
     rpc::client client(CALLEE_IP, 8080);
+    // Retry connection until the server is available
+    bool success = false;
+    while (!success) {
+        try {
+            // Attempt to connect to the server
+            client.call("process", replies);
+            success = true;
+        } catch (const std::exception& e) {
+            // Connection failed, sleep for a while before retrying
+            std::cout << "Retrying" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
     client.call("process", replies);
 }
 
