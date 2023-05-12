@@ -23,9 +23,11 @@
 #include <rpc/client.h>
 #include <rpc/server.h>
 #include <thread>
+#include <botan/auto_rng.h>
 #include <botan/cipher_mode.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/secmem.h>
 #include <seal/seal.h>
 
 std::string CLIENT_IP = "";
@@ -78,22 +80,36 @@ void process() {
     //////////////////////////////////////////// AES ENCRYPTION  ////////////////////////////////////////////
 
     start = std::chrono::high_resolution_clock::now();
+
     Botan::AutoSeeded_RNG rng;
 
     const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
 
-    auto enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Encryption);
+    auto enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
     enc->set_key(key);
 
     // generate 0 nonce (IV)
     Botan::secure_vector<uint8_t> iv(0, enc->default_nonce_length());
 
     // Copy input data to a buffer that will be encrypted
-    Botan::secure_vector<uint8_t> encrypted_snippet;
-    encrypted_snippet = encoded_snippet;
-
+    Botan::secure_vector<uint8_t> encrypted_snippet (encoded_snippet.begin(), encoded_snippet.end());
     enc->start(iv);
     enc->finish(encrypted_snippet);
+
+    Botan::secure_vector<uint8_t> decrypted_snippet (encrypted_snippet.begin(), encrypted_snippet.end());
+    /*
+    auto dec = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION);
+    dec->set_key(key);
+
+    dec->start(iv);
+    dec->finish(decrypted_snippet);
+
+    if (encoded_snippet == (std::vector<char>)Botan::unlock(decrypted_snippet)) {
+        std::cout << "Hurray!" << std::endl;
+    } else {
+        std::cout << "Buhu!" << std::endl;
+    }
+    */
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -108,7 +124,7 @@ void process() {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", encrypted_snippet);
+            client.call("process", encoded_snippet);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
