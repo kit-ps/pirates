@@ -123,7 +123,6 @@ void process(const std::vector<uint8_t>& raw_db) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
-    client.call("process", replies);
 }
 
 int main(int argc, char **argv) {
