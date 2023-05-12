@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <iterator>
+#include <sys/types.h>
 #include <vector>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -38,16 +39,14 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
-void process() {
-    //////////////////////////////////////////// LPCNet Encoding ////////////////////////////////////////////
-    std::cout << "Encoding voice snippet ..." << std::endl;
+/// Read the snippet of size SNIPPET_SIZE from file and encode it with LPCNet
+std::vector<char> encode_snippet() {
     // Open input file
     FILE *input_file;
     std::string tmp = "/audio/raw_" + std::to_string(SNIPPET_SIZE) + "ms.wav";
     input_file = fopen(tmp.c_str(), "rb");
     if (!input_file) {
         std::cerr << "Failed to open raw audio file!" << std::endl;
-        return;
     }
 
     std::vector<char> encoded_snippet;
@@ -59,7 +58,6 @@ void process() {
     short pcm[lpcnet_samples_per_frame(lf)];
     // Read from wav file and encode each read frame
     // Append frame to encoded_snippet vector
-    auto start = std::chrono::high_resolution_clock::now();
     while (1) {      
         int nread = fread(pcm, sizeof(short), lpcnet_samples_per_frame(lf), input_file);
         if (nread != lpcnet_samples_per_frame(lf)) break;
@@ -69,21 +67,14 @@ void process() {
             encoded_snippet.push_back(c);
         }
     }
-    // Stop measuring time
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //std::cout << "Needed time for LPCNet encoding: " << duration.count() << "\u03bcs\n";
-    std::cout << "Needed time for LPCNet encoding: " << duration.count() << "mus" << std::endl;
-     // Close files for encoding
     fclose(input_file);
 
-    //////////////////////////////////////////// AES ENCRYPTION  ////////////////////////////////////////////
+    return encoded_snippet;
+}
 
-    start = std::chrono::high_resolution_clock::now();
-
-    Botan::AutoSeeded_RNG rng;
-
-    const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
+/// Encrypt the snippet using AES-CBC
+Botan::secure_vector<u_int8_t> encrypt_snippet(std::vector<char> snippet) {
+    const std::vector<uint8_t> key = Botan::hex_decode("C0FFEEC0FFEC0FFEEC0FFEC0FFEEC0FF");
 
     auto enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
     enc->set_key(key);
@@ -92,39 +83,31 @@ void process() {
     Botan::secure_vector<uint8_t> iv(0, enc->default_nonce_length());
 
     // Copy input data to a buffer that will be encrypted
-    Botan::secure_vector<uint8_t> encrypted_snippet (encoded_snippet.begin(), encoded_snippet.end());
+    Botan::secure_vector<uint8_t> encrypted_snippet (
+            snippet.begin(), 
+            snippet.end());
+
     enc->start(iv);
     enc->finish(encrypted_snippet);
 
-    Botan::secure_vector<uint8_t> decrypted_snippet (encrypted_snippet.begin(), encrypted_snippet.end());
-    /*
-    auto dec = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION);
-    dec->set_key(key);
+    return encrypted_snippet;
+}
 
-    dec->start(iv);
-    dec->finish(decrypted_snippet);
+void process() {
 
-    if (encoded_snippet == (std::vector<char>)Botan::unlock(decrypted_snippet)) {
-        std::cout << "Hurray!" << std::endl;
-    } else {
-        std::cout << "Buhu!" << std::endl;
-    }
-    */
+    std::vector<char> encoded_snippet = encode_snippet();
 
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Needed time for AES encryption: " << duration.count() << "mus\n";
+    Botan::secure_vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
 
-    //////////////////////////////////////////// Send to Relay ////////////////////////////////////////////
+    ///////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay
     rpc::client client(RELAY_IP, 8080);
-    //std::this_thread::sleep_for(std::chrono::seconds(10));
     // Retry connection until the server is available
     bool success = false;
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", encoded_snippet);
+            client.call("process", Botan::unlock(encrypted_snippet));
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -132,8 +115,6 @@ void process() {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
-    // Call the remote procedure to send the file
-    //client.call("process", encoded_snippet);
 }
 
 int main(int argc, char **argv) {
@@ -167,7 +148,6 @@ int main(int argc, char **argv) {
     
     for (int i = 0; i < NUM_ROUNDS; i++) {
         process();
-        //std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 
     return 0;
