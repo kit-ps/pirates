@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <chrono>
 #include <iterator>
@@ -40,7 +41,7 @@ int NUM_ROUNDS;
 int GROUP_SIZE;
 
 /// Read the snippet of size SNIPPET_SIZE from file and encode it with LPCNet
-std::vector<char> encode_snippet() {
+std::vector<uint8_t> encode_snippet() {
     // Open input file
     FILE *input_file;
     std::string tmp = "/audio/raw_" + std::to_string(SNIPPET_SIZE) + "ms.wav";
@@ -49,7 +50,7 @@ std::vector<char> encode_snippet() {
         std::cerr << "Failed to open raw audio file!" << std::endl;
     }
 
-    std::vector<char> encoded_snippet;
+    std::vector<uint8_t> encoded_snippet;
     
     // direct_split = 0
     LPCNetFreeDV *lf = lpcnet_freedv_create(0);
@@ -64,7 +65,7 @@ std::vector<char> encode_snippet() {
 
         lpcnet_enc(lf, pcm, frame);
         for (char c : frame) {
-            encoded_snippet.push_back(c);
+            encoded_snippet.push_back((uint8_t)c);
         }
     }
     fclose(input_file);
@@ -73,7 +74,7 @@ std::vector<char> encode_snippet() {
 }
 
 /// Encrypt the snippet using AES-CBC
-Botan::secure_vector<u_int8_t> encrypt_snippet(std::vector<char> snippet) {
+std::vector<uint8_t> encrypt_snippet(std::vector<uint8_t> snippet) {
     const std::vector<uint8_t> key = Botan::hex_decode("C0FFEEC0FFEC0FFEEC0FFEC0FFEEC0FF");
 
     auto enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
@@ -90,14 +91,14 @@ Botan::secure_vector<u_int8_t> encrypt_snippet(std::vector<char> snippet) {
     enc->start(iv);
     enc->finish(encrypted_snippet);
 
-    return encrypted_snippet;
+    return Botan::unlock(encrypted_snippet);
 }
 
 void process() {
 
-    std::vector<char> encoded_snippet = encode_snippet();
+    std::vector<uint8_t> encoded_snippet = encode_snippet();
 
-    Botan::secure_vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
+    std::vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
 
     ///////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay
@@ -107,7 +108,7 @@ void process() {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", Botan::unlock(encrypted_snippet));
+            client.call("process", encrypted_snippet);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying

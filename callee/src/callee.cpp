@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <chrono>
 #include <netinet/in.h>
@@ -27,17 +28,17 @@ int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 
-std::vector<char> process_reply(std::vector<char> rep) {
+std::vector<uint8_t> process_reply(std::vector<uint8_t> rep) {
     // TODO
     return rep;
 }
 
-std::vector<char> decrypt_reply(std::vector<char> rep) {
+std::vector<uint8_t> decrypt_reply(std::vector<uint8_t> rep) {
     // TODO
     return rep;
 }
 
-std::vector<short> decode_reply(std::vector<char> rep) {
+std::vector<short> decode_reply(std::vector<uint8_t> rep) {
     // Taken from lpcnet_dec.c
     int nbits = 0, nerrs = 0;
     // Default in lpcnet_dec is 0.0
@@ -79,10 +80,10 @@ void process(const std::vector<char>& replies) {
 
     std::cout << "Rep size: " << rep_size << std::endl;
 
-    std::vector<char> rep;
+    std::vector<uint8_t> rep;
     for (int i = 0; i < GROUP_SIZE - 1; i++) {
         // get current reply from replies.
-        rep = std::vector<char>(
+        rep = std::vector<uint8_t>(
                 replies.begin() + i * rep_size, 
                 replies.begin() + (i + 1) * rep_size); 
 

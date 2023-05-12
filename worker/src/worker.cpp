@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <random>
 #include <netinet/in.h>
@@ -73,23 +74,23 @@ SecretKey secret_key;
 
 /// Preprocess the raw database received from the relay
 /// to prepare for answering PIR requests.
-std::vector<char> preprocess_db(std::vector<char> raw_db) {
+std::vector<uint8_t> preprocess_db(std::vector<uint8_t> raw_db) {
     // TODO
     return raw_db;
 }
 
 /// Compute a single PIR reply on the preprocessed db
-std::vector<char> compute_pir_reply(std::vector<char> preprocessed_db) {
+std::vector<uint8_t> compute_pir_reply(std::vector<uint8_t> preprocessed_db) {
     // TODO
     return {'a', 'b', 'c', 'd', 'e'};
 }
 
-void process(const std::vector<char>& raw_db) {
+void process(const std::vector<uint8_t>& raw_db) {
     
     std::cout << "Hi from worker" << std::endl;
 
     // 1. Preprocess raw database
-    std::vector<char> preprocessed_db = preprocess_db(raw_db);
+    std::vector<uint8_t> preprocessed_db = preprocess_db(raw_db);
 
     // 2. Select a random index within all clients for the callee
     std::random_device rd;  // a seed source for the random number engine
@@ -98,11 +99,11 @@ void process(const std::vector<char>& raw_db) {
     int callee_index = distrib(gen);
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
-    std::vector<char> replies;
+    std::vector<uint8_t> replies;
     for (int j = 0; j < callee_index; j++) {
         replies = {};
         for (int k = 0; k < GROUP_SIZE - 1; k++) {
-            std::vector<char> rep = compute_pir_reply(preprocessed_db);
+            std::vector<uint8_t> rep = compute_pir_reply(preprocessed_db);
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
         }
     }
