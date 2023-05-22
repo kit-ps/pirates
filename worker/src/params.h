@@ -1,0 +1,24 @@
+#ifndef PIRATES_GLOBAL_H
+#define PIRATES_GLOBAL_H
+
+#define N 4096
+#define PLAIN_BIT 19
+#define COEFF_MODULUS_54 18014398509289953UL
+#define COEFF_MODULUS_55 36028797018652673UL
+#define PLAIN_MODULUS 270337
+#define NUM_CT_PER_QUERY (2 * (NUM_MESSAGE / N))
+#define SUBROUND_TIME 480
+#define RAW_DB_SIZE 2280 * 64   
+#define SERVER_PACKET_SIZE (8 * 1024)
+#define CLIENT_PACKET_SIZE (64 * 1024)
+#define CT_SIZE (2 * 8 * N)
+#define OPTIMIZATION_2
+#define MIN(a,b) ((a) < (b)) ? (a) : (b)
+
+#define NTT_NUM_THREAD 8
+
+#define MASTER_PORT 2800
+#define WORKER_PORT 2199
+#define CLIENT_PORT 2000
+
+#endif

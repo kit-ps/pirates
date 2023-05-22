@@ -57,7 +57,8 @@ services:
       -w ${IP_WORKER} 
       -c ${IP_CALLEE}
       -g ${GROUP_SIZE}
-      -u ${NUM_USERS}"
+      -u ${NUM_USERS}
+      -n ${NUM_MESSAGE}"
   relay:
     build:
       context: ./
