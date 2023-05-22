@@ -92,7 +92,6 @@ void process(const std::vector<uint8_t>& raw_db) {
     std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<> distrib(1, NUM_CLIENT);
     int callee_index = distrib(gen);
-    callee_index = 1;
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
     std::vector<uint8_t> replies;
