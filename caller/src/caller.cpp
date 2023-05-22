@@ -102,18 +102,20 @@ void process() {
 
     ///////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay
-    rpc::client client(RELAY_IP, 8080);
+    rpc::client *client = new rpc::client(RELAY_IP, 8080);
     // Retry connection until the server is available
     bool success = false;
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", encrypted_snippet);
+            client->call("process", encrypted_snippet);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
             std::cout << "Retrying" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
+            delete client;
+            client = new rpc::client(RELAY_IP, 8080);
         }
     }
 }

@@ -37,17 +37,19 @@ void process(const std::vector<uint8_t>& snippet) {
         raw_db.push_back(snippet[i % snippet.size()]);
     }
 
-    rpc::client client(WORKER_IP, 8080);
+    rpc::client *client = new rpc::client(WORKER_IP, 8080);
     bool success = false;
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", raw_db);
+            client->call("process", raw_db);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
             std::cout << "Retrying" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
+            delete client;
+            client = new rpc::client(WORKER_IP, 8080);
         }
     }
 }
