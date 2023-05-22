@@ -8,6 +8,7 @@ services:
       - ./caller:/home/app/pirates:z
       - ./FastPIR:/home/app/pirates/FastPIR:z
       - ./audio:/audio:z
+      - ./logs:/logs:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -16,10 +17,14 @@ services:
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/caller -c ${IP_CALLER}
-      -s ${MESSAGE_SIZE}
+      ./bin/caller 
+      -o ${IP_CALLER}
       -r ${NUM_ROUNDS}
-      -e ${IP_RELAY}"
+      -s ${SNIPPET_SIZE}
+      -g ${GROUP_SIZE}
+      -u ${NUM_USERS}
+      -x ${RUN_ID}
+      -n ${IP_RELAY}"
     init: true
   callee:
     build:
@@ -29,6 +34,7 @@ services:
       - ./callee:/home/app/pirates:z
       - ./FastPIR:/home/app/pirates/FastPIR:z
   #    - ./audio:/audio:z
+      - ./logs:/logs:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -37,11 +43,13 @@ services:
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/callee -c ${IP_CALLEE}
-      -s ${MESSAGE_SIZE}
+      ./bin/callee 
+      -o ${IP_CALLEE}
       -r ${NUM_ROUNDS}
-      -e ${IP_RELAY}
-      -g ${GROUP_SIZE}"
+      -s ${SNIPPET_SIZE}
+      -g ${GROUP_SIZE}
+      -u ${NUM_USERS}
+      -x ${RUN_ID}"
     init: true
   worker:
     build:
@@ -50,6 +58,7 @@ services:
     volumes:
       - ./worker:/home/app/pirates:z
       - ./FastPIR:/home/app/pirates/FastPIR:z
+      - ./logs:/logs:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -59,11 +68,13 @@ services:
       bash -c "cd /home/app/pirates
       && cmake . && make &&
       ./bin/worker 
-      -w ${IP_WORKER} 
-      -c ${IP_CALLEE}
+      -o ${IP_WORKER}
+      -r ${NUM_ROUNDS}
+      -s ${SNIPPET_SIZE}
       -g ${GROUP_SIZE}
       -u ${NUM_USERS}
-      -n ${NUM_MESSAGE}"
+      -x ${RUN_ID}
+      -n ${IP_CALLEE}"
     init: true
   relay:
     build:
@@ -72,6 +83,7 @@ services:
     volumes:
       - ./relay:/home/app/pirates:z
       - ./FastPIR:/home/app/pirates/FastPIR:z
+      - ./logs:/logs:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -80,9 +92,14 @@ services:
     command: >
       bash -c "cd /home/app/pirates
       && cmake . && make &&
-      ./bin/relay -e ${IP_RELAY}
-      -w ${IP_WORKER}
-      -n ${NUM_MESSAGE}"
+      ./bin/relay
+      -o ${IP_RELAY}
+      -r ${NUM_ROUNDS}
+      -s ${SNIPPET_SIZE}
+      -g ${GROUP_SIZE}
+      -u ${NUM_USERS}
+      -x ${RUN_ID}
+      -n ${IP_WORKER}"
     init: true
 networks:
   pirates-network:
