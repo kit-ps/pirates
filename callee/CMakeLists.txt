@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+add_subdirectory(FastPIR/src)
+
 #include_directories()
 #link_directories()
 # Needed to find liblpcnetfreedv.so.0.4
@@ -24,4 +26,4 @@ find_package(SEAL 4.1 REQUIRED)
 #set(SOURCES ./src/caller.cpp)
 add_executable(callee ./src/callee.cpp)
 target_include_directories(callee PRIVATE /home/app/LPCNet/src/)
-target_link_libraries(callee SEAL::seal_shared crypto lpcnetfreedv rpc Botan::Botan)
+target_link_libraries(callee SEAL::seal_shared crypto lpcnetfreedv rpc Botan::Botan fastpir)

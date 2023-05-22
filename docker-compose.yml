@@ -6,6 +6,7 @@ services:
       dockerfile: ./caller/Dockerfile
     volumes:
       - ./caller:/home/app/pirates:z
+      - ./FastPIR:/home/app/pirates/FastPIR:z
       - ./audio:/audio:z
     cap_add:
       - NET_ADMIN
@@ -19,12 +20,14 @@ services:
       -s ${MESSAGE_SIZE}
       -r ${NUM_ROUNDS}
       -e ${IP_RELAY}"
+    init: true
   callee:
     build:
       context: ./
       dockerfile: ./callee/Dockerfile
     volumes:
       - ./callee:/home/app/pirates:z
+      - ./FastPIR:/home/app/pirates/FastPIR:z
   #    - ./audio:/audio:z
     cap_add:
       - NET_ADMIN
@@ -39,12 +42,14 @@ services:
       -r ${NUM_ROUNDS}
       -e ${IP_RELAY}
       -g ${GROUP_SIZE}"
+    init: true
   worker:
     build:
       context: ./
       dockerfile: ./worker/Dockerfile
     volumes:
       - ./worker:/home/app/pirates:z
+      - ./FastPIR:/home/app/pirates/FastPIR:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -59,12 +64,14 @@ services:
       -g ${GROUP_SIZE}
       -u ${NUM_USERS}
       -n ${NUM_MESSAGE}"
+    init: true
   relay:
     build:
       context: ./
       dockerfile: ./relay/Dockerfile
     volumes:
       - ./relay:/home/app/pirates:z
+      - ./FastPIR:/home/app/pirates/FastPIR:z
     cap_add:
       - NET_ADMIN
     networks:
@@ -76,6 +83,7 @@ services:
       ./bin/relay -e ${IP_RELAY}
       -w ${IP_WORKER}
       -n ${NUM_MESSAGE}"
+    init: true
 networks:
   pirates-network:
     ipam:

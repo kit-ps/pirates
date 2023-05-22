@@ -16,7 +16,7 @@
 #include<rpc/server.h>
 #include<rpc/client.h>
 
-#define RAW_DB_SIZE 2288 * 64
+#define RAW_DB_SIZE 1152 * 64
 
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
@@ -32,6 +32,7 @@ int GROUP_SIZE;
 void process(const std::vector<uint8_t>& snippet) {
     
     std::cout << "Hi from relay" << std::endl;
+    std::cout << "Got a snippet of length " << snippet.size() << std::endl;
     std::vector<uint8_t> raw_db;
     for (int i = 0; i < RAW_DB_SIZE; i++) {
         raw_db.push_back(snippet[i % snippet.size()]);

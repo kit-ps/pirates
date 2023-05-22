@@ -98,7 +98,14 @@ void process() {
 
     std::vector<uint8_t> encoded_snippet = encode_snippet();
 
+    std::cout << "I am showing you the start of the encoded snippet: ";
+    for (int i = 0; i < 16; ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << ((int)encoded_snippet[i]) << " ";
+    }
+    std::cout << std::dec << std::endl;
+
     std::vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
+    std::cout << "Original encrypted snippet length: " << encrypted_snippet.size() << std::endl;
 
     ///////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay

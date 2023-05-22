@@ -1,4 +1,4 @@
-//#include <params.h>
+//#include "params.h"
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -16,36 +16,30 @@
 #include <stack>
 #include <rpc/server.h>
 #include <rpc/client.h>
-
-#define NTT_NUM_THREAD 8
-#define PLAIN_BIT 19
-#define N 4096
-#define NUM_CT_PER_QUERY (2 * (NUM_MESSAGE / N))
-#define COEFF_MODULUS_54 18014398509289953UL
-#define COEFF_MODULUS_55 36028797018652673UL
-#define PLAIN_MODULUS 270337
+#include <chrono>
+#include "../FastPIR/src/fastpirparams.hpp"
+#include "../FastPIR/src/server.hpp"
+#include "../FastPIR/src/client.hpp"
+#include "serialization_helper.h"
 
 using namespace seal;
 
 unsigned int NUM_COLUMNS;
 int DB_ROWS;
 
-pthread_t *threads;
-pthread_t ntt_threads[NTT_NUM_THREAD];
-int *thread_id;
-
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
 std::string CALLEE_IP = "";
-int MESSAGE_SIZE;
-int NUM_MESSAGE;
+int MESSAGE_SIZE = 1152;
+int NUM_MESSAGE = 64;
 int NUM_ROUNDS;
 int NUM_CLIENT;
 int GROUP_SIZE;
 int NUM_THREAD = 0;
+FastPIRParams *PIR_PARAMS;
 //char *raw_db;
 
-Ciphertext **query;
+Ciphertext *query;
 Ciphertext *result;
 GaloisKeys *gal_keys;
 Plaintext *encoded_db;
@@ -62,55 +56,69 @@ SecretKey secret_key;
 //void *pir(void *thread_id);
 //void *preprocess_db(void *thread_id);
 
-/// Preprocess the raw database received from the relay
-/// to prepare for answering PIR requests.
-std::vector<uint8_t> preprocess_db(std::vector<uint8_t> raw_db) {
-    // TODO
-    return raw_db;
-}
-
-/// Compute a single PIR reply on the preprocessed db
-std::vector<uint8_t> compute_pir_reply(std::vector<uint8_t> preprocessed_db) {
-    // TODO
-    return {'a', 'b', 'c', 'd', 'e'};
+std::vector<uint8_t> compute_pir_reply(Server& pir_server, Client& pir_client) {
+    auto query = pir_client.gen_query(0);
+    pir_server.set_client_galois_keys(0, pir_client.get_galois_keys());
+    auto reply = pir_server.get_response(0, query);
+    auto ser = seal_ser(reply);
+    std::vector<uint8_t> result(ser.begin(), ser.end());
+    return result;
 }
 
 void process(const std::vector<uint8_t>& raw_db) {
     
     std::cout << "Hi from worker" << std::endl;
 
+    Server pir_server(*PIR_PARAMS);
+    Client pir_client(*PIR_PARAMS);
+    auto serialized_secret_key = seal_ser(pir_client.get_secret_key());
+
+    std::vector<std::vector<uint8_t>> unrolled_db;
+    for (int i = 0; i < NUM_CLIENT; i++)
+    {
+        std::vector<uint8_t> current(MESSAGE_SIZE);
+        std::copy(raw_db.begin() + i * MESSAGE_SIZE, raw_db.begin() + (i + 1) * MESSAGE_SIZE, current.begin());
+        unrolled_db.push_back(current);
+    }
+    pir_server.set_db(unrolled_db);
+    std::cout << "SET DB" << std::endl;
+
     // 1. Preprocess raw database
-    std::vector<uint8_t> preprocessed_db = preprocess_db(raw_db);
+    pir_server.preprocess_db();
+    std::cout << "PREPROCESS DB" << std::endl;
 
     // 2. Select a random index within all clients for the callee
     std::random_device rd;  // a seed source for the random number engine
     std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<> distrib(1, NUM_CLIENT);
     int callee_index = distrib(gen);
+    callee_index = 1;
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
     std::vector<uint8_t> replies;
     for (int j = 0; j < callee_index; j++) {
-        replies = {};
+        replies.clear();
         for (int k = 0; k < GROUP_SIZE - 1; k++) {
-            std::vector<uint8_t> rep = compute_pir_reply(preprocessed_db);
+            std::vector<uint8_t> rep = compute_pir_reply(pir_server, pir_client);
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
         }
     }
 
     // 4. Send replies to callee
-    rpc::client client(CALLEE_IP, 8080);
+    rpc::client *client = new rpc::client(CALLEE_IP, 8080);
     // Retry connection until the server is available
     bool success = false;
     while (!success) {
         try {
             // Attempt to connect to the server
-            client.call("process", replies);
+            client->call("process", serialized_secret_key, replies);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
             std::cout << "Retrying" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
+            delete client;
+            client = new rpc::client(CALLEE_IP, 8080);
         }
     }
 }
@@ -151,38 +159,9 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to open log file!" << std::endl;
         return 1;
     }
-    // Number of columns for the database
-    NUM_COLUMNS = (ceil((double)(MESSAGE_SIZE * 4) / (PLAIN_BIT - 1)) * 2);
-    // Number of rows
-    DB_ROWS = (NUM_CT_PER_QUERY * (NUM_COLUMNS/2));
-    // Create threats for calculating the PIR answer
-    threads = new pthread_t [NUM_THREAD];
-    thread_id = new int[NUM_THREAD];
-    srand(time(NULL));
-    //EncryptionParameters parms(scheme_type::BFV);
-    EncryptionParameters parms(scheme_type::bfv);
-    parms.set_poly_modulus_degree(N);
-    //parms.set_coeff_modulus({COEFF_MODULUS_54, COEFF_MODULUS_55});
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(N));
-    parms.set_plain_modulus(PLAIN_MODULUS);
-    std::cout << "N: ";
-    std::cout << N << std::endl;
-    std::cout << "COEFF_MODULUS_54: ";
-    std::cout << COEFF_MODULUS_54 << std::endl;
-    std::cout << "COEFF_MODULUS_55: ";
-    std::cout << COEFF_MODULUS_55 << std::endl;
-    std::cout << "PLAIN_MODULUS: ";
-    std::cout << PLAIN_MODULUS << std::endl;
-    context = new SEALContext(parms);
-    std::cout << "Parameter validation (success): " << context->parameter_error_message() << std::endl;    
-    //print_parameters(context);
 
-    //std::cout << NUM_MESSAGE << std::endl;
-    //batch_encoder = new BatchEncoder(*context);
-    KeyGenerator keygen(*context);
-    //evaluator = new Evaluator(context);
-    //encoded_db = new Plaintext[DB_ROWS];
-    //result = new Ciphertext[NUM_CLIENT];
+    PIR_PARAMS = new FastPIRParams(NUM_CLIENT, MESSAGE_SIZE);
+
     // Create database
     //raw_db = new
     // Receive data from relay

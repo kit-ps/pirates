@@ -24,6 +24,9 @@
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
+#include "serialization_helper.h"
+#include "../FastPIR/src/fastpirparams.hpp"
+#include "../FastPIR/src/client.hpp"
 
 std::string CALLEE_IP = "";
 std::string MASTER_IP = "";
@@ -32,12 +35,13 @@ int MESSAGE_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
+int NUM_CLIENTS = 512;
 
 /// Gets as input a PIR reply and returns the contained snippet
-std::vector<uint8_t> process_reply(std::vector<uint8_t> rep) {
-    // TODO
-    std::vector<uint8_t> snippet(2288, 0);
-    return snippet;
+std::vector<uint8_t> process_reply(std::vector<uint8_t> rep, Client& pir_client) {
+    std::string rep_str(rep.begin(), rep.end());
+    auto cipher = seal_deser<seal::Ciphertext>(rep_str, *pir_client.get_seal_context());
+    return pir_client.decode_response(cipher, 0);
 }
 
 // AES-decrypts the given snippet and returns the resulting plaintext
@@ -95,8 +99,11 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
     return decoded_snippet;
 }
 
-void process(const std::vector<char>& replies) {
+void process(const std::string& secret_key, const std::vector<char>& replies) {
     std::cout << "Hi from callee" << std::endl;
+
+    FastPIRParams pir_params(NUM_CLIENTS, MESSAGE_SIZE);
+    Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 
     // Compute size of single reply
     int rep_size = replies.size() / (GROUP_SIZE - 1); 
@@ -111,10 +118,18 @@ void process(const std::vector<char>& replies) {
                 replies.begin() + (i + 1) * rep_size); 
 
         // PIR process reply
-        rep = process_reply(rep);
-        
+        rep = process_reply(rep, pir_client);
+        std::cout << "Reply length: " << rep.size() << std::endl;
+
         // AES decrypt reply
         rep = decrypt_reply(rep);
+
+
+        std::cout << "I am showing you the start of the encoded snippet: ";
+        for (int i = 0; i < 16; ++i) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << ((int)rep[i]) << " ";
+        }
+        std::cout << std::dec << std::endl;
 
         // LPCNet decode reply
         std::vector<short> decoded_snippet = decode_reply(rep);
@@ -135,6 +150,7 @@ int main(int argc, char **argv) {
                 break;
             case 's':
                 MESSAGE_SIZE = std::stoi(optarg);
+                MESSAGE_SIZE = 1152;
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);

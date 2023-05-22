@@ -1,0 +1,16 @@
+#ifndef FASTPIR_BFV_PARAMS_H
+#define FASTPIR_BFV_PARAMS_H
+
+//Must be a power of 2, minimum value 4096
+#define POLY_MODULUS_DEGREE 4096
+
+#define PRIME_60 (1152921504606830593ULL)
+#define PRIME_49 (562949953216513ULL)
+#define COEFF_MOD_ARR {PRIME_60, PRIME_49}
+
+#define PLAIN_BIT 20
+
+//Must be greater than 2^PLAIN_BIT
+ #define PLAIN_MODULUS 1073153
+
+#endif
