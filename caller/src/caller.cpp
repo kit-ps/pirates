@@ -141,18 +141,6 @@ void process() {
     std::vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
     std::cout << "Original encrypted snippet length: " << encrypted_snippet.size() << std::endl;
     */
-    std::ofstream logFile("/logs/caller.csv");
-    if (!logFile) {
-        std::cerr << "Failed to open caller log!" << std::endl;
-    }
-    std::string identifier = RUN_ID 
-        + std::to_string(SNIPPET_SIZE)
-        + std::to_string(GROUP_SIZE)
-        + std::to_string(NUM_USERS);
-
-    std::cout << identifier << std::endl;
-    logFile << identifier << "," << time_before << "," << time_after_encoding << "," << time_after_encryption << std::endl;
-    logFile.close();
 
     ///////////////////////// Send to Relay ////////////////////////////////////////////
     // Create a connection to the relay
@@ -173,6 +161,18 @@ void process() {
         }
     }
 
+    std::ofstream logFile("/logs/caller.csv");
+    if (!logFile) {
+        std::cerr << "Failed to open caller log!" << std::endl;
+    }
+    std::string identifier = RUN_ID 
+        + std::to_string(SNIPPET_SIZE)
+        + std::to_string(GROUP_SIZE)
+        + std::to_string(NUM_USERS);
+
+    std::cout << identifier << std::endl;
+    logFile << identifier << "," << time_before << "," << time_after_encoding << "," << time_after_encryption << std::endl;
+    logFile.close();
 }
 
 int main(int argc, char **argv) {
@@ -211,13 +211,6 @@ int main(int argc, char **argv) {
             default:
                 abort();
         }
-    }
-    std::cout << "Hi" << std::endl;
-    // Create a file for logging
-    std::ofstream logFile("caller_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open caller log!" << std::endl;
-        return 1;
     }
     
     for (int i = 0; i < NUM_ROUNDS; i++) {
