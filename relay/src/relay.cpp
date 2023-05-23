@@ -15,35 +15,42 @@
 #include <fstream>
 #include<rpc/server.h>
 #include<rpc/client.h>
+#include"logging_helper.h"
 
 #define RAW_DB_SIZE 1152 * 64
 
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
-int MESSAGE_SIZE;
-int NUM_MESSAGE;
+std::string RUN_ID = "";
+int SNIPPET_SIZE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
+int NUM_USERS;
 //char *raw_db;
 
 /// 1. Receive snippet from client 
 /// 2. Extend snippet to database
 /// 3. Relay database to worker
-void process(const std::vector<uint8_t>& snippet) {
+void process(int r, const std::vector<uint8_t>& snippet) {
     
     std::cout << "Hi from relay" << std::endl;
+
+    uint64_t time_before_relay = get_time();
+
     std::cout << "Got a snippet of length " << snippet.size() << std::endl;
     std::vector<uint8_t> raw_db;
     for (int i = 0; i < RAW_DB_SIZE; i++) {
         raw_db.push_back(snippet[i % snippet.size()]);
     }
 
+    uint64_t time_after_relay = get_time();
+
     rpc::client *client = new rpc::client(WORKER_IP, 8080);
     bool success = false;
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", raw_db);
+            client->call("process", r, raw_db);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -53,37 +60,44 @@ void process(const std::vector<uint8_t>& snippet) {
             client = new rpc::client(WORKER_IP, 8080);
         }
     }
+
+    std::string log_content = RUN_ID + "-"
+        + std::to_string(r) + ","
+        + std::to_string(time_before_relay) + ","
+        + std::to_string(time_after_relay);
+        
+    write_log("relay", log_content);
 }
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES relay ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "m:w:s:n:r:g:e:")) != -1) {
+    while ((c = getopt(argc, argv, "o:r:s:g:u:x:n:")) != -1) {
         switch(c) {
-            case 'e':
+            case 'o':
                 RELAY_IP = std::string(optarg);
-                break;
-            case 'w':
-                WORKER_IP = std::string(optarg);
-                break;
-            case 'n':
-                NUM_MESSAGE = std::stoi(optarg);
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
                 break;
+            case 's':
+                SNIPPET_SIZE = std::stoi(optarg);
+                break;
             case 'g':
                 GROUP_SIZE = std::stoi(optarg);
+                break;
+            case 'u':
+                NUM_USERS = std::stoi(optarg);
+                break;
+            case 'x':
+                RUN_ID = std::string(optarg);
+                break;
+            case 'n':
+                WORKER_IP = std::string(optarg);
                 break;
             default:
                 abort();
         }
-    }
-    // Create a file for logging
-    std::ofstream logFile("relay_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open log file!" << std::endl;
-        return 1;
     }
     // Create an RPC server
     rpc::server server(RELAY_IP, 8080);
@@ -94,7 +108,5 @@ int main(int argc, char **argv) {
     // Run the server
     //server.async_run(1);
     server.run();
-    // Close log file
-    logFile.close();
     return 0;
 }

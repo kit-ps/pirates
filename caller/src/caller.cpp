@@ -96,7 +96,7 @@ std::vector<uint8_t> encrypt_snippet(std::vector<uint8_t> snippet) {
     return Botan::unlock(encrypted_snippet);
 }
 
-void process(int round) {
+void process(int r) {
 
     uint64_t time_before = get_time(); 
 
@@ -145,7 +145,7 @@ void process(int round) {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", encrypted_snippet);
+            client->call("process", r, encrypted_snippet);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -156,7 +156,8 @@ void process(int round) {
         }
     }
     std::string log_content = RUN_ID + "-"
-        + std::to_string(round) + ","
+        + std::to_string(r) + ","
+        + std::to_string(GROUP_SIZE) + "-" + std::to_string(NUM_USERS) + "-" + std::to_string(SNIPPET_SIZE) + ","
         + std::to_string(time_before) + ","
         + std::to_string(time_after_encoding) + ","
         + std::to_string(time_after_encryption);
@@ -171,31 +172,24 @@ int main(int argc, char **argv) {
         switch(c) {
             case 'o':
                 CLIENT_IP = std::string(optarg);
-                std::cout << "Caller IP is " << CLIENT_IP << std::endl;
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
-                std::cout << "Num rounds is " << NUM_ROUNDS << std::endl;
                 break;
             case 's':
                 SNIPPET_SIZE = std::stoi(optarg);
-                std::cout << "snip size is " << SNIPPET_SIZE << std::endl;
                 break;
             case 'g':
                 GROUP_SIZE = std::stoi(optarg);
-                std::cout << "group size is " << GROUP_SIZE << std::endl;
                 break;
             case 'u':
                 NUM_USERS = std::stoi(optarg);
-                std::cout << "num users is " << NUM_USERS << std::endl;
                 break;
             case 'x':
                 RUN_ID = std::string(optarg);
-                std::cout << "Run ID is " << RUN_ID << std::endl;
                 break;
             case 'n':
                 RELAY_IP = std::string(optarg);
-                std::cout << "RELAY IP is " << RELAY_IP << std::endl;
                 break;
             default:
                 abort();

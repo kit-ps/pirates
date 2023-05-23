@@ -25,15 +25,17 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 #include "serialization_helper.h"
+#include "logging_helper.h"
 #include "../FastPIR/src/fastpirparams.hpp"
 #include "../FastPIR/src/client.hpp"
 
 std::string CALLEE_IP = "";
-std::string MASTER_IP = "";
-std::string RELAY_IP = "";
-int MESSAGE_SIZE;
+std::string RUN_ID = "";
+int MESSAGE_SIZE = 1152;
+int SNIPPET_SIZE;
 int NUM_MESSAGE;
 int NUM_ROUNDS;
+int NUM_USERS;
 int GROUP_SIZE;
 int NUM_CLIENTS = 512;
 
@@ -99,8 +101,10 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
     return decoded_snippet;
 }
 
-void process(const std::string& secret_key, const std::vector<char>& replies) {
+void process(int r, const std::string& secret_key, const std::vector<char>& replies) {
     std::cout << "Hi from callee" << std::endl;
+
+    uint64_t time_before_callee = get_time();
 
     FastPIRParams pir_params(NUM_CLIENTS, MESSAGE_SIZE);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
@@ -110,6 +114,7 @@ void process(const std::string& secret_key, const std::vector<char>& replies) {
 
     std::cout << "Rep size: " << rep_size << std::endl;
 
+    // TODO: Split up loop so we can get time for decode/decrypt/decode separately
     std::vector<uint8_t> rep;
     for (int i = 0; i < GROUP_SIZE - 1; i++) {
         // get current reply from replies.
@@ -134,29 +139,39 @@ void process(const std::string& secret_key, const std::vector<char>& replies) {
         // LPCNet decode reply
         std::vector<short> decoded_snippet = decode_reply(rep);
     }
+
+    uint64_t time_after_callee = get_time();
+
+    std::string log_content = RUN_ID + "-"
+        + std::to_string(r) + ","
+        + std::to_string(time_before_callee) + ","
+        + std::to_string(time_after_callee);
+        
+    write_log("callee", log_content);
 }
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES client ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "c:m:s:n:r:e:g:")) != -1) {
+    while ((c = getopt(argc, argv, "o:r:s:g:u:x:")) != -1) {
         switch(c) {
-            case 'c':
+            case 'o':
                 CALLEE_IP = std::string(optarg);
-                std::cout << "Callee IP is " << CALLEE_IP << std::endl;
-                break;
-            case 'e':
-                RELAY_IP = std::string(optarg);
-                break;
-            case 's':
-                MESSAGE_SIZE = std::stoi(optarg);
-                MESSAGE_SIZE = 1152;
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
                 break;
+            case 's':
+                SNIPPET_SIZE = std::stoi(optarg);
+                break;
             case 'g':
                 GROUP_SIZE = std::stoi(optarg);
+                break;
+            case 'u':
+                NUM_USERS = std::stoi(optarg);
+                break;
+            case 'x':
+                RUN_ID = std::string(optarg);
                 break;
             default:
                 abort();

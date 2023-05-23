@@ -21,19 +21,20 @@
 #include "../FastPIR/src/server.hpp"
 #include "../FastPIR/src/client.hpp"
 #include "serialization_helper.h"
+#include "logging_helper.h"
 
 using namespace seal;
 
 unsigned int NUM_COLUMNS;
 int DB_ROWS;
 
-std::string RELAY_IP = "";
 std::string WORKER_IP = "";
 std::string CALLEE_IP = "";
+std::string RUN_ID = "";
 int MESSAGE_SIZE = 1152;
-int NUM_MESSAGE = 64;
+int SNIPPET_SIZE;
 int NUM_ROUNDS;
-int NUM_CLIENT;
+int NUM_USERS;
 int GROUP_SIZE;
 int NUM_THREAD = 0;
 FastPIRParams *PIR_PARAMS;
@@ -65,8 +66,10 @@ std::vector<uint8_t> compute_pir_reply(Server& pir_server, Client& pir_client) {
     return result;
 }
 
-void process(const std::vector<uint8_t>& raw_db) {
+void process(int r, const std::vector<uint8_t>& raw_db) {
     
+    uint64_t time_before_worker = get_time();
+
     std::cout << "Hi from worker" << std::endl;
 
     Server pir_server(*PIR_PARAMS);
@@ -74,7 +77,7 @@ void process(const std::vector<uint8_t>& raw_db) {
     auto serialized_secret_key = seal_ser(pir_client.get_secret_key());
 
     std::vector<std::vector<uint8_t>> unrolled_db;
-    for (int i = 0; i < NUM_CLIENT; i++)
+    for (int i = 0; i < NUM_USERS; i++)
     {
         std::vector<uint8_t> current(MESSAGE_SIZE);
         std::copy(raw_db.begin() + i * MESSAGE_SIZE, raw_db.begin() + (i + 1) * MESSAGE_SIZE, current.begin());
@@ -87,10 +90,12 @@ void process(const std::vector<uint8_t>& raw_db) {
     pir_server.preprocess_db();
     std::cout << "PREPROCESS DB" << std::endl;
 
+    uint64_t time_after_preprocessing = get_time();
+
     // 2. Select a random index within all clients for the callee
     std::random_device rd;  // a seed source for the random number engine
     std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> distrib(1, NUM_CLIENT);
+    std::uniform_int_distribution<> distrib(1, NUM_USERS);
     int callee_index = distrib(gen);
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
@@ -102,6 +107,8 @@ void process(const std::vector<uint8_t>& raw_db) {
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
         }
     }
+    
+    uint64_t time_after_replies = get_time();
 
     // 4. Send replies to callee
     rpc::client *client = new rpc::client(CALLEE_IP, 8080);
@@ -110,7 +117,7 @@ void process(const std::vector<uint8_t>& raw_db) {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", serialized_secret_key, replies);
+            client->call("process", r, serialized_secret_key, replies);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -120,46 +127,48 @@ void process(const std::vector<uint8_t>& raw_db) {
             client = new rpc::client(CALLEE_IP, 8080);
         }
     }
+
+    std::string log_content = RUN_ID + "-"
+        + std::to_string(r) + ","
+        + std::to_string(time_before_worker) + ","
+        + std::to_string(time_after_preprocessing) + ","
+        + std::to_string(time_after_replies);
+        
+    write_log("worker", log_content);
 }
 
 int main(int argc, char **argv) {
     std::cout << "Starting PIRATES worker ..." << std::endl;
     int c;
-    while ((c = getopt(argc, argv, "c:w:s:n:r:g:u:")) != -1) {
+    while ((c = getopt(argc, argv, "o:r:s:g:u:x:n:")) != -1) {
         switch(c) {
-            case 'w':
+            case 'o':
                 WORKER_IP = std::string(optarg);
-                break;
-            case 'c':
-                CALLEE_IP = std::string(optarg);
-                break;
-            case 'n':
-                NUM_MESSAGE = std::stoi(optarg);
                 break;
             case 'r':
                 NUM_ROUNDS = std::stoi(optarg);
+                break;
+            case 's':
+                SNIPPET_SIZE = std::stoi(optarg);
                 break;
             case 'g':
                 GROUP_SIZE = std::stoi(optarg);
                 break;
             case 'u':
-                NUM_CLIENT = std::stoi(optarg);
+                NUM_USERS = std::stoi(optarg);
                 break;
-            case 't':
-                NUM_THREAD = std::stoi(optarg);
+            case 'x':
+                RUN_ID = std::string(optarg);
+                break;
+            case 'n':
+                CALLEE_IP = std::string(optarg);
                 break;
             default:
                 abort();
         }
     }
-    // Create a file for logging
-    std::ofstream logFile("worker_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open log file!" << std::endl;
-        return 1;
-    }
 
-    PIR_PARAMS = new FastPIRParams(NUM_CLIENT, MESSAGE_SIZE);
+    PIR_PARAMS = new FastPIRParams(NUM_USERS, MESSAGE_SIZE);
 
     // Create database
     //raw_db = new
@@ -170,7 +179,6 @@ int main(int argc, char **argv) {
     // Bind the sendVoice function to a remote procedure
     server.bind("process", process);
     server.run();
-    // Close log file
-    logFile.close();
+
     return 0;
 }

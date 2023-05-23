@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/app/pirates/src/logging_helper.h
+string
+-
+chrono
+-
+fstream
+-
+
 /home/app/pirates/src/relay.cpp
 cstdint
 -
@@ -41,6 +49,8 @@ rpc/server.h
 -
 rpc/client.h
 -
+logging_helper.h
+/home/app/pirates/src/logging_helper.h
 
 /usr/local/include/SEAL-3.5/gsl/gsl_assert
 intrin.h
