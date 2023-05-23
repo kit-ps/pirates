@@ -31,6 +31,7 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 #include <seal/seal.h>
+#include "logging_helper.h"
 
 std::string CLIENT_IP = "";
 std::string MASTER_IP = "";
@@ -95,18 +96,13 @@ std::vector<uint8_t> encrypt_snippet(std::vector<uint8_t> snippet) {
     return Botan::unlock(encrypted_snippet);
 }
 
-void process() {
+void process(int round) {
 
-    uint64_t time_before = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now().time_since_epoch()
-    ).count();
-
-    std::cout << "Time before: " << time_before << std::endl;
+    uint64_t time_before = get_time(); 
 
     std::vector<uint8_t> encoded_snippet = encode_snippet();
 
-    uint64_t time_after_encoding = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    uint64_t time_after_encoding = get_time();
 
     std::cout << "I am showing you the start of the encoded snippet: ";
     for (int i = 0; i < 16; ++i) {
@@ -116,8 +112,7 @@ void process() {
 
     std::vector<u_int8_t> encrypted_snippet = encrypt_snippet(encoded_snippet);
 
-    uint64_t time_after_encryption = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    uint64_t time_after_encryption = get_time();
 
     std::cout << "Original encrypted snippet length: " << encrypted_snippet.size() << std::endl;
 
@@ -160,19 +155,13 @@ void process() {
             client = new rpc::client(RELAY_IP, 8080);
         }
     }
-
-    std::ofstream logFile("/logs/caller.csv");
-    if (!logFile) {
-        std::cerr << "Failed to open caller log!" << std::endl;
-    }
-    std::string identifier = RUN_ID 
-        + std::to_string(SNIPPET_SIZE)
-        + std::to_string(GROUP_SIZE)
-        + std::to_string(NUM_USERS);
-
-    std::cout << identifier << std::endl;
-    logFile << identifier << "," << time_before << "," << time_after_encoding << "," << time_after_encryption << std::endl;
-    logFile.close();
+    std::string log_content = RUN_ID + "-"
+        + std::to_string(round) + ","
+        + std::to_string(time_before) + ","
+        + std::to_string(time_after_encoding) + ","
+        + std::to_string(time_after_encryption);
+        
+    write_log("caller", log_content);
 }
 
 int main(int argc, char **argv) {
@@ -214,7 +203,7 @@ int main(int argc, char **argv) {
     }
     
     for (int i = 0; i < NUM_ROUNDS; i++) {
-        process();
+        process(i);
     }
 
     return 0;
