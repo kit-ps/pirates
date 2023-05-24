@@ -63,7 +63,7 @@ def main():
         description="Run Pirates benchmarks"
     )
     parser.add_argument('-g', '--groupsize', action='store_true', help='Run group size benchmarks')
-    parser.add_argument('-s', '--snippetpsize', action='store_true', help='Run snippet size benchmarks')
+    parser.add_argument('-s', '--snippetsize', action='store_true', help='Run snippet size benchmarks')
     parser.add_argument('-u', '--users', action='store_true', help='Run number of users benchmarks')
     args = parser.parse_args()
 
