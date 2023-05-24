@@ -71,11 +71,11 @@ def main():
         print('Running group size benchmark')
         run_group_bench()
 
-    if (args.groupsize):
+    if (args.snippetsize):
         print('Running number of users benchmark')
         run_user_bench()
 
-    if (args.groupsize):
+    if (args.users):
         print('Running snippet size benchmark')
         run_snippet_bench()
 
