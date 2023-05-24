@@ -16,6 +16,7 @@
 #include <stack>
 #include <rpc/server.h>
 #include <rpc/client.h>
+#include <rpc/this_server.h>
 #include <chrono>
 #include "../FastPIR/src/fastpirparams.hpp"
 #include "../FastPIR/src/server.hpp"
@@ -140,6 +141,9 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
         + std::to_string(time_after_replies);
         
     write_log("worker", log_content);
+    if (r == NUM_ROUNDS - 1) {
+        rpc::this_server().stop();
+    }
 }
 
 int main(int argc, char **argv) {

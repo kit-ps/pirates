@@ -19,6 +19,7 @@
 #include "lpcnet/lpcnet_freedv.h"
 #include <fstream>
 #include <rpc/server.h>
+#include <rpc/this_server.h>
 #include <botan/auto_rng.h>
 #include <botan/cipher_mode.h>
 #include <botan/hex.h>
@@ -102,7 +103,7 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
 }
 
 void process(int r, const std::string& secret_key, const std::vector<std::vector<uint8_t>>& replies) {
-    std::string log_content = RUN_ID + '-' + std::to_string(r);
+    std::string log_content = RUN_ID + '-' + std::to_string(r) + ',';
     std::cout << "Hi from callee" << std::endl;
     // Declare data type for reply vector
     std::vector<std::vector<uint8_t>> pir_decoded_replies;
@@ -139,7 +140,7 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     }
     std::cout << std::dec << std::endl;
 
-    log_content += std::to_string(get_time());
+    log_content += std::to_string(get_time()) + ',';
     
 
     // LPCNet decode reply
@@ -154,6 +155,9 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     // time after decryption
     // time after LPC
     write_log("callee", log_content);
+    if (r == NUM_ROUNDS - 1) {
+        rpc::this_server().stop();
+    }
 }
 
 int main(int argc, char **argv) {

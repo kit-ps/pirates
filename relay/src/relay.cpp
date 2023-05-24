@@ -14,6 +14,7 @@
 #include "seal/seal.h"
 #include <fstream>
 #include<rpc/server.h>
+#include<rpc/this_server.h>
 #include<rpc/client.h>
 #include"logging_helper.h"
 
@@ -70,6 +71,9 @@ void process(int r, const std::vector<uint8_t>& snippet) {
         + std::to_string(time_after_relay);
         
     write_log("relay", log_content);
+    if (r == NUM_ROUNDS - 1) {
+        rpc::this_server().stop();
+    }
 }
 
 int main(int argc, char **argv) {
