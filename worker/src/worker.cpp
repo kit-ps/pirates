@@ -103,12 +103,13 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     int callee_index = distrib(gen);
 
     // 3. Generate GROUP_SIZE PIR answers up to callee index
-    std::vector<uint8_t> replies;
+    std::vector<std::vector<uint8_t>> replies;
     for (int j = 0; j < callee_index; j++) {
         replies.clear();
         for (int k = 0; k < 1.5 * (GROUP_SIZE - 1); k++) {
             std::vector<uint8_t> rep = compute_pir_reply(pir_server, pir_client);
-            replies.insert(std::end(replies), std::begin(rep), std::end(rep));
+            //replies.insert(std::end(replies), std::begin(rep), std::end(rep));
+            replies.push_back(rep);
         }
     }
     
