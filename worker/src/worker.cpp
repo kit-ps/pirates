@@ -72,7 +72,7 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
 
     std::cout << "Hi from worker" << std::endl;
 
-    PIR_PARAMS = new FastPIRParams(3*NUM_USERS/(1.5 * (GROUP_SIZE - 1)), raw_db[0].size());
+    PIR_PARAMS = new FastPIRParams(raw_db.size(), raw_db[0].size());
     Server pir_server(*PIR_PARAMS);
     Client pir_client(*PIR_PARAMS);
     auto serialized_secret_key = seal_ser(pir_client.get_secret_key());
