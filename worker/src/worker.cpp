@@ -66,7 +66,7 @@ std::vector<uint8_t> compute_pir_reply(Server& pir_server, Client& pir_client) {
     return result;
 }
 
-void process(int r, const std::vector<uint8_t>& raw_db) {
+void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     
     uint64_t time_before_worker = get_time();
 
@@ -76,6 +76,7 @@ void process(int r, const std::vector<uint8_t>& raw_db) {
     Client pir_client(*PIR_PARAMS);
     auto serialized_secret_key = seal_ser(pir_client.get_secret_key());
 
+    /*
     std::vector<std::vector<uint8_t>> unrolled_db;
     for (int i = 0; i < NUM_USERS; i++)
     {
@@ -84,6 +85,8 @@ void process(int r, const std::vector<uint8_t>& raw_db) {
         unrolled_db.push_back(current);
     }
     pir_server.set_db(unrolled_db);
+    */
+    pir_server.set_db(raw_db);
     std::cout << "SET DB" << std::endl;
 
     // 1. Preprocess raw database
@@ -102,7 +105,7 @@ void process(int r, const std::vector<uint8_t>& raw_db) {
     std::vector<uint8_t> replies;
     for (int j = 0; j < callee_index; j++) {
         replies.clear();
-        for (int k = 0; k < GROUP_SIZE - 1; k++) {
+        for (int k = 0; k < 1.5 * (GROUP_SIZE - 1); k++) {
             std::vector<uint8_t> rep = compute_pir_reply(pir_server, pir_client);
             replies.insert(std::end(replies), std::begin(rep), std::end(rep));
         }
@@ -168,7 +171,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    PIR_PARAMS = new FastPIRParams(NUM_USERS, MESSAGE_SIZE);
+    PIR_PARAMS = new FastPIRParams(3*NUM_USERS/(1.5 * (GROUP_SIZE - 1)), MESSAGE_SIZE);
 
     // Create database
     //raw_db = new
