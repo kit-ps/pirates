@@ -102,10 +102,11 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
 }
 
 void process(int r, const std::string& secret_key, const std::vector<char>& replies) {
+    std::string log_content = RUN_ID + '-' + std::to_string(r);
     std::cout << "Hi from callee" << std::endl;
 
-    uint64_t time_before_callee = get_time();
-
+    //uint64_t time_before_callee = get_time();
+    log_content += time_before_callee + ",";
     FastPIRParams pir_params(NUM_CLIENTS, MESSAGE_SIZE);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 
@@ -116,37 +117,51 @@ void process(int r, const std::string& secret_key, const std::vector<char>& repl
 
     // TODO: Split up loop so we can get time for decode/decrypt/decode separately
     std::vector<uint8_t> rep;
+    //uint64_t *get_replies = new uint64_t[GROUP_SIZE - 1];
+    //uint64_t *process_replies = new uint64_t[GROUP_SIZE - 1];
+    //uint64_t *decrypt_replies = new uint64_t[GROUP_SIZE - 1];
+    // Get current reply from replies
     for (int i = 0; i < GROUP_SIZE - 1; i++) {
-        // get current reply from replies.
+        
         rep = std::vector<uint8_t>(
                 replies.begin() + i * rep_size, 
                 replies.begin() + (i + 1) * rep_size); 
-
-        // PIR process reply
+    }
+    log_content += std::to_string(get_time()) + ',';
+    // PIR process reply
+    // threads
+    for (int i = 0; i < GROUP_SIZE - 1; i++) {
         rep = process_reply(rep, pir_client);
         std::cout << "Reply length: " << rep.size() << std::endl;
-
-        // AES decrypt reply
+    }
+    // barrier
+    log_content += std::to_string(get_time()) + ',';
+    // AES decrypt reply
+    for (int i = 0; i < GROUP_SIZE - 1; i++) {
         rep = decrypt_reply(rep);
+    }
+    log_content += std::to_string(get_time());
+    std::cout << "I am showing you the start of the encoded snippet: ";
+    for (int i = 0; i < 16; ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << ((int)rep[i]) << " ";
+    }
+    std::cout << std::dec << std::endl;
 
-
-        std::cout << "I am showing you the start of the encoded snippet: ";
-        for (int i = 0; i < 16; ++i) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') << ((int)rep[i]) << " ";
-        }
-        std::cout << std::dec << std::endl;
-
-        // LPCNet decode reply
+    // LPCNet decode reply
         std::vector<short> decoded_snippet = decode_reply(rep);
     }
 
     uint64_t time_after_callee = get_time();
-
+    // time before callee
+    // time after PIR
+    // time after decryption
+    // time after LPC
+    /*
     std::string log_content = RUN_ID + "-"
         + std::to_string(r) + ","
         + std::to_string(time_before_callee) + ","
         + std::to_string(time_after_callee);
-        
+    */
     write_log("callee", log_content);
 }
 
