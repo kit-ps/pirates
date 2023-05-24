@@ -105,8 +105,8 @@ void process(int r, const std::string& secret_key, const std::vector<char>& repl
     std::string log_content = RUN_ID + '-' + std::to_string(r);
     std::cout << "Hi from callee" << std::endl;
 
-    //uint64_t time_before_callee = get_time();
-    log_content += time_before_callee + ",";
+    uint64_t time_before_callee = get_time();
+    log_content += std::to_string(time_before_callee) + ",";
     FastPIRParams pir_params(NUM_CLIENTS, MESSAGE_SIZE);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 
@@ -130,6 +130,7 @@ void process(int r, const std::string& secret_key, const std::vector<char>& repl
     log_content += std::to_string(get_time()) + ',';
     // PIR process reply
     // threads
+
     for (int i = 0; i < GROUP_SIZE - 1; i++) {
         rep = process_reply(rep, pir_client);
         std::cout << "Reply length: " << rep.size() << std::endl;
@@ -149,9 +150,10 @@ void process(int r, const std::string& secret_key, const std::vector<char>& repl
 
     // LPCNet decode reply
         std::vector<short> decoded_snippet = decode_reply(rep);
-    }
+
 
     uint64_t time_after_callee = get_time();
+    log_content += std::to_string(time_after_callee);
     // time before callee
     // time after PIR
     // time after decryption
