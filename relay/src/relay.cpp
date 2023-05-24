@@ -37,10 +37,13 @@ void process(int r, const std::vector<uint8_t>& snippet) {
 
     uint64_t time_before_relay = get_time();
 
-    std::cout << "Got a snippet of length " << snippet.size() << std::endl;
-    std::vector<uint8_t> raw_db;
-    for (int i = 0; i < RAW_DB_SIZE; i++) {
-        raw_db.push_back(snippet[i % snippet.size()]);
+    //std::cout << "Got a snippet of length " << snippet.size() << std::endl;
+    std::vector<std::vector<uint8_t>> raw_db;
+    int items_per_bucket = (int) 3 * NUM_USERS / (1.5 * (GROUP_SIZE-1));
+
+    std::cout << "Items per bucket: " << items_per_bucket << std::endl;
+    for (int i = 0; i < items_per_bucket; i++) {
+        raw_db.push_back(snippet);
     }
 
     uint64_t time_after_relay = get_time();
