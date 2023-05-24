@@ -23,11 +23,11 @@ def gen_env(group_size, num_users, snippet_size):
     run_id = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
 
     body = (
-        'SUBNET=172.123.0.0/16\n'
-        'IP_WORKER=172.123.0.2\n'
-        'IP_CALLER=172.123.0.3\n'
-        'IP_CALLEE=172.123.0.4\n'
-        'IP_RELAY=172.123.0.5\n'
+        'SUBNET=172.31.0.0/16\n'
+        'IP_WORKER=172.31.0.2\n'
+        'IP_CALLER=172.31.0.3\n'
+        'IP_CALLEE=172.31.0.4\n'
+        'IP_RELAY=172.31.0.5\n'
         'NUM_ROUNDS=1\n'
         f'SNIPPET_SIZE={snippet_size}\n'
         f'GROUP_SIZE={group_size}\n'
