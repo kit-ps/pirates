@@ -129,8 +129,8 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     uint64_t time_before_callee = get_time();
     log_content += std::to_string(time_before_callee) + ",";
 
-    int num_bucket = 1.5 * (GROUP_SIZE - 1);
-    int items_per_bucket = 3 * NUM_USERS / num_bucket;
+    int num_bucket = std::ceil(1.5 * (GROUP_SIZE - 1));
+    int items_per_bucket = std::ceil(3 * NUM_USERS / num_bucket);
     FastPIRParams pir_params(items_per_bucket, SNIPPET_MAP[SNIPPET_SIZE]);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 

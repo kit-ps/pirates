@@ -38,8 +38,8 @@ void process(int r, const std::vector<uint8_t>& snippet) {
 
     //std::cout << "Got a snippet of length " << snippet.size() << std::endl;
     std::vector<std::vector<uint8_t>> raw_db;
-    int num_bucket = 1.5 * (GROUP_SIZE - 1);
-    int items_per_bucket = 3 * NUM_USERS / num_bucket;
+    int num_bucket = std::ceil(1.5 * (GROUP_SIZE - 1));
+    int items_per_bucket = std::ceil(3 * NUM_USERS / num_bucket);
 
     std::cout << "Items per bucket: " << items_per_bucket << std::endl;
     for (int i = 0; i < items_per_bucket; i++) {
