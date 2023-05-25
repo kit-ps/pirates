@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <map>
+#include <thread>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +39,8 @@ int SNIPPET_SIZE;
 int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
-int NUM_THREAD = 0;
+int NUM_THREAD = 4;
+int NUM_BUCKET;
 
 FastPIRParams *PIR_PARAMS;
 Server *PIR_SERVER;
@@ -86,6 +88,13 @@ std::vector<uint8_t> compute_pir_reply() {
     return result;
 }
 
+/// Call compute_pir_reply count times and ignore return values
+void compute_dummy_replies(int count) {
+    for (int i = 0; i < count; i++) {
+        compute_pir_reply();
+    }
+}
+
 void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     
     uint64_t time_before_worker = get_time();
@@ -117,15 +126,29 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     std::uniform_int_distribution<> distrib(1, NUM_USERS);
     int callee_index = distrib(gen);
 
-    // 3. Generate GROUP_SIZE PIR answers up to callee index
-    std::vector<std::vector<uint8_t>> replies;
-    for (int j = 0; j < callee_index; j++) {
-        replies.clear();
-        for (int k = 0; k < 1.5 * (GROUP_SIZE - 1); k++) {
-            std::vector<uint8_t> rep = compute_pir_reply();
-            //replies.insert(std::end(replies), std::begin(rep), std::end(rep));
-            replies.push_back(rep);
-        }
+
+    // Total number of replies up to callee: calle_index * number of buckets
+    // Number of buckets: 1.5 * group size -1
+    int replies_total = callee_index * NUM_BUCKET;
+    int replies_per_thread = replies_total / NUM_THREAD;
+    std::vector<std::thread> threads;
+    
+    // Span NUM_THREAD - 1 daughter threads and give each replies to compute
+    for (int i = 0; i < NUM_THREAD - 1; i++) {
+        threads.push_back(std::thread(compute_dummy_replies, replies_per_thread));
+    }
+
+    // Compute remaining replies in main thread
+    std::vector<std::vector<uint8_t>> all_replies;
+    for (int j = 0; j < replies_per_thread; j++) {
+        std::vector<uint8_t> rep = compute_pir_reply();
+        all_replies.push_back(rep);
+    }
+    std::vector<std::vector<uint8_t>> callee_replies(all_replies.begin(), all_replies.begin() + NUM_BUCKET);
+
+    // Wait for other threads
+    for (auto& t : threads) {
+        t.join();
     }
     
     uint64_t time_after_replies = get_time();
@@ -137,7 +160,7 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", r, PIR_SER_KEY, replies);
+            client->call("process", r, PIR_SER_KEY, callee_replies);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -190,7 +213,9 @@ int main(int argc, char **argv) {
                 abort();
         }
     }
-    int items_per_bucket = (int) 3 * NUM_USERS / (1.5 * (GROUP_SIZE-1));
+
+    NUM_BUCKET = 1.5 * (GROUP_SIZE - 1);
+    int items_per_bucket = 3 * NUM_USERS / NUM_BUCKET;
     PIR_PARAMS = new FastPIRParams(items_per_bucket, SNIPPET_MAP[SNIPPET_SIZE]);
     PIR_SERVER = new Server(*PIR_PARAMS);
     PIR_CLIENT = new Client(*PIR_PARAMS);

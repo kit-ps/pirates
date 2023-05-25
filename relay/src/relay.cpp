@@ -18,8 +18,6 @@
 #include<rpc/client.h>
 #include"logging_helper.h"
 
-#define RAW_DB_SIZE 1152 * 64
-
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
 std::string RUN_ID = "";
@@ -40,7 +38,8 @@ void process(int r, const std::vector<uint8_t>& snippet) {
 
     //std::cout << "Got a snippet of length " << snippet.size() << std::endl;
     std::vector<std::vector<uint8_t>> raw_db;
-    int items_per_bucket = (int) 3 * NUM_USERS / (1.5 * (GROUP_SIZE-1));
+    int num_bucket = 1.5 * (GROUP_SIZE - 1);
+    int items_per_bucket = 3 * NUM_USERS / num_bucket;
 
     std::cout << "Items per bucket: " << items_per_bucket << std::endl;
     for (int i = 0; i < items_per_bucket; i++) {
