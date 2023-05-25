@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <iostream>
 #include <chrono>
+#include <map>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +41,22 @@ int NUM_USERS;
 int GROUP_SIZE;
 int NUM_CLIENTS = 512;
 
+std::map<int, int> SNIPPET_MAP = {
+    { 40, 368 },
+    { 60, 576 },
+    { 80, 736 },
+    { 100, 944 },
+    { 120, 1152 },
+    { 140, 1312 },
+    { 160, 1520 },
+    { 180, 1728 },
+    { 200, 1888 },
+    { 220, 2096 },
+    { 240, 2304 },
+    { 260, 2448 },
+    { 280, 2656 },
+    { 300, 2864 }
+};
 /// Gets as input a PIR reply and returns the contained snippet
 std::vector<uint8_t> process_reply(std::vector<uint8_t> rep, Client& pir_client) {
     std::string rep_str(rep.begin(), rep.end());
@@ -111,7 +128,10 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     std::vector<std::vector<short>> lpc_decoded_replies;
     uint64_t time_before_callee = get_time();
     log_content += std::to_string(time_before_callee) + ",";
-    FastPIRParams pir_params(NUM_CLIENTS, MESSAGE_SIZE);
+
+    int num_bucket = 1.5 * (GROUP_SIZE - 1);
+    int items_per_bucket = 3 * NUM_USERS / num_bucket;
+    FastPIRParams pir_params(items_per_bucket, SNIPPET_MAP[SNIPPET_SIZE]);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 
     // TODO: Split up loop so we can get time for decode/decrypt/decode separately
@@ -187,12 +207,7 @@ int main(int argc, char **argv) {
                 abort();
         }
     }
-    // Create a file for logging
-    std::ofstream logFile("callee_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open log file!" << std::endl;
-        return 1;
-    }
+
     // Create an RPC server
     rpc::server server(CALLEE_IP, 8080);
 
@@ -200,53 +215,6 @@ int main(int argc, char **argv) {
     server.bind("process", process);
 
     // Run the server
-    //server.async_run(1);
     server.run();
-    // Close log file
-    logFile.close();
     
-    /*
-    //////////////////////////////////////////// LPCNET DECODING ////////////////////////////////////////////
-    
-    std::cout << "Decoding voice snippet ..." << std::endl;
-    // Open files
-    fin_dec = fopen("/home/app/pirates/birch_encoded", "rb");
-    fout_dec = fopen("/home/app/pirates/birch_decoded.wav", "wb");
-    // Taken from lpcnet_dec.c
-    int nbits = 0, nerrs = 0;
-    int bits_read = 0;
-    // Default in lpcnet_dec is 0.0
-    float ber = 0.0;
-    // Default in lpcnet_dec is -1
-    int ber_en = -1;
-    // Default in lpcnet_dec is 0
-    int ber_st = 0;
-    // We decode
-    start = std::chrono::high_resolution_clock::now();
-    do {
-        bits_read = fread(frame, sizeof(char), lpcnet_bits_per_frame(lf), fin_dec);
-        nbits += ber_en - ber_st;
-        if (ber != 0.0) {
-            int i;
-            for(i=ber_st; i<=ber_en; i++) {
-                float r = (float)rand()/RAND_MAX;
-                if (r < ber) {
-                    frame[i] = (frame[i] ^ 1) & 0x1;
-                    nerrs++;
-                }
-            }
-        }            
-
-        lpcnet_dec(lf,frame,pcm);
-        fwrite(pcm, sizeof(short), lpcnet_samples_per_frame(lf), fout_dec);
-        
-        if (fout_dec == stdout) fflush(stdout);
-        
-    } while(bits_read != 0);
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Needed time for LPCNet decoding: " << duration.count() << "\u03bcs\n";
-    logFile.close();
-    return 0;
-    */
 }
