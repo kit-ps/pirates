@@ -6,12 +6,12 @@ import string
 GROUP_MIN        = 2
 GROUP_MAX        = 22
 GROUP_STEP       = 2
-GROUP_DEFAULT    = 8
+GROUP_DEFAULT    = 2
 
 USER_EXP_MIN     = 4
 USER_EXP_MAX     = 14
 USER_EXP_STEP    = 1
-USER_EXP_DEFAULT = 10
+USER_EXP_DEFAULT = 4
 
 SNIPPET_MIN      = 40
 SNIPPET_MAX      = 320
@@ -73,11 +73,11 @@ def main():
 
     if (args.snippetsize):
         print('Running number of users benchmark')
-        run_user_bench()
+        run_snippet_bench()
 
     if (args.users):
         print('Running snippet size benchmark')
-        run_snippet_bench()
+        run_user_bench()
 
 if __name__ == "__main__":
     main()

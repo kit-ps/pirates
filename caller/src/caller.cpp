@@ -115,6 +115,7 @@ void process(int r) {
     uint64_t time_after_encryption = get_time();
 
     std::cout << "Original encrypted snippet length: " << encrypted_snippet.size() << std::endl;
+    
 
     ///////////////////////// Send to Relay ////////////////////////////////////////////
     /*

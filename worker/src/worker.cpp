@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <map>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,8 +39,12 @@ int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
 int NUM_THREAD = 0;
+
 FastPIRParams *PIR_PARAMS;
-//char *raw_db;
+Server *PIR_SERVER;
+Client *PIR_CLIENT;
+PIRQuery PIR_QUERY;
+std::string PIR_SER_KEY;
 
 Ciphertext *query;
 Ciphertext *result;
@@ -54,14 +59,28 @@ SEALContext *context;
 KeyGenerator *keygen;
 SecretKey secret_key;
 
+std::map<int, int> SNIPPET_MAP = {
+    { 40, 368 },
+    { 60, 576 },
+    { 80, 736 },
+    { 100, 944 },
+    { 120, 1152 },
+    { 140, 1312 },
+    { 160, 1520 },
+    { 180, 1728 },
+    { 200, 1888 },
+    { 220, 2096 },
+    { 240, 2304 },
+    { 260, 2448 },
+    { 280, 2656 },
+    { 300, 2864 }
+};
 //void *gen_keys(void *thread_id);
 //void *pir(void *thread_id);
 //void *preprocess_db(void *thread_id);
 
-std::vector<uint8_t> compute_pir_reply(Server& pir_server, Client& pir_client) {
-    auto query = pir_client.gen_query(0);
-    pir_server.set_client_galois_keys(0, pir_client.get_galois_keys());
-    auto reply = pir_server.get_response(0, query);
+std::vector<uint8_t> compute_pir_reply() {
+    auto reply = PIR_SERVER->get_response(0, PIR_QUERY);
     auto ser = seal_ser(reply);
     std::vector<uint8_t> result(ser.begin(), ser.end());
     return result;
@@ -73,11 +92,6 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
 
     std::cout << "Hi from worker" << std::endl;
 
-    PIR_PARAMS = new FastPIRParams(raw_db.size(), raw_db[0].size());
-    Server pir_server(*PIR_PARAMS);
-    Client pir_client(*PIR_PARAMS);
-    auto serialized_secret_key = seal_ser(pir_client.get_secret_key());
-
     /*
     std::vector<std::vector<uint8_t>> unrolled_db;
     for (int i = 0; i < NUM_USERS; i++)
@@ -88,11 +102,11 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     }
     pir_server.set_db(unrolled_db);
     */
-    pir_server.set_db(raw_db);
+    PIR_SERVER->set_db(raw_db);
     std::cout << "SET DB" << std::endl;
 
     // 1. Preprocess raw database
-    pir_server.preprocess_db();
+    PIR_SERVER->preprocess_db();
     std::cout << "PREPROCESS DB" << std::endl;
 
     uint64_t time_after_preprocessing = get_time();
@@ -108,7 +122,7 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     for (int j = 0; j < callee_index; j++) {
         replies.clear();
         for (int k = 0; k < 1.5 * (GROUP_SIZE - 1); k++) {
-            std::vector<uint8_t> rep = compute_pir_reply(pir_server, pir_client);
+            std::vector<uint8_t> rep = compute_pir_reply();
             //replies.insert(std::end(replies), std::begin(rep), std::end(rep));
             replies.push_back(rep);
         }
@@ -123,7 +137,7 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", r, serialized_secret_key, replies);
+            client->call("process", r, PIR_SER_KEY, replies);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
@@ -176,7 +190,13 @@ int main(int argc, char **argv) {
                 abort();
         }
     }
-
+    int items_per_bucket = (int) 3 * NUM_USERS / (1.5 * (GROUP_SIZE-1));
+    PIR_PARAMS = new FastPIRParams(items_per_bucket, SNIPPET_MAP[SNIPPET_SIZE]);
+    PIR_SERVER = new Server(*PIR_PARAMS);
+    PIR_CLIENT = new Client(*PIR_PARAMS);
+    PIR_SERVER->set_client_galois_keys(0, PIR_CLIENT->get_galois_keys());
+    PIR_QUERY = PIR_CLIENT->gen_query(0); 
+    PIR_SER_KEY = seal_ser(PIR_CLIENT->get_secret_key());
 
     // Create database
     //raw_db = new

@@ -204,7 +204,6 @@ int main(int argc, char **argv) {
     server.run();
     // Close log file
     logFile.close();
-    return 0;
     
     /*
     //////////////////////////////////////////// LPCNET DECODING ////////////////////////////////////////////
