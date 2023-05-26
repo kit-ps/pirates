@@ -132,6 +132,8 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
         all_replies.push_back(rep);
     }
 
+    std::vector<std::vector<uint8_t>> callee_replies(NUM_BUCKET, all_replies[0]);
+
     // Wait for other threads
     for (auto& t : threads) {
         t.join();
@@ -146,7 +148,7 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     while (!success) {
         try {
             // Attempt to connect to the server
-            client->call("process", r, PIR_SER_KEY, all_replies);
+            client->call("process", r, PIR_SER_KEY, callee_replies);
             success = true;
         } catch (const std::exception& e) {
             // Connection failed, sleep for a while before retrying
