@@ -6,10 +6,10 @@ import string
 GROUP_MIN        = 2
 GROUP_MAX        = 22
 GROUP_STEP       = 2
-GROUP_DEFAULT    = 2
+GROUP_DEFAULT    = 4
 
 USER_EXP_MIN     = 4
-USER_EXP_MAX     = 14
+USER_EXP_MAX     = 11
 USER_EXP_STEP    = 1
 USER_EXP_DEFAULT = 4
 

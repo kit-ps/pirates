@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <map>
+#include <thread>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +41,7 @@ int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
 int NUM_CLIENTS = 512;
+int NUM_THREAD = 4;
 
 std::map<int, int> SNIPPET_MAP = {
     { 40, 368 },
@@ -57,11 +59,18 @@ std::map<int, int> SNIPPET_MAP = {
     { 280, 2656 },
     { 300, 2864 }
 };
+
 /// Gets as input a PIR reply and returns the contained snippet
 std::vector<uint8_t> process_reply(std::vector<uint8_t> rep, Client& pir_client) {
     std::string rep_str(rep.begin(), rep.end());
     auto cipher = seal_deser<seal::Ciphertext>(rep_str, *pir_client.get_seal_context());
     return pir_client.decode_response(cipher, 0);
+}
+
+void dummy_process_replies(int count, std::vector<uint8_t> rep, Client pir_client) {
+    for (int i = 0; i < count; i++) {
+        process_reply(rep, pir_client);
+    }
 }
 
 // AES-decrypts the given snippet and returns the resulting plaintext
@@ -123,31 +132,33 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     std::string log_content = RUN_ID + '-' + std::to_string(r) + ',';
     std::cout << "Hi from callee" << std::endl;
     // Declare data type for reply vector
-    std::vector<std::vector<uint8_t>> pir_decoded_replies;
     std::vector<std::vector<uint8_t>> aes_decrypted_replies;
     std::vector<std::vector<short>> lpc_decoded_replies;
     uint64_t time_before_callee = get_time();
     log_content += std::to_string(time_before_callee) + ",";
 
-    int num_bucket = 1.5 * (GROUP_SIZE - 1);
-    int items_per_bucket = 3 * NUM_USERS / num_bucket;
+    int num_bucket = std::ceil(1.5 * (GROUP_SIZE - 1));
+    int items_per_bucket = std::ceil(3 * NUM_USERS / num_bucket);
     FastPIRParams pir_params(items_per_bucket, SNIPPET_MAP[SNIPPET_SIZE]);
     Client pir_client(pir_params, seal_deser<seal::SecretKey>(secret_key, seal::SEALContext(pir_params.get_seal_params())));
 
-    // TODO: Split up loop so we can get time for decode/decrypt/decode separately
-    //std::vector<uint8_t> rep;
-    // PIR process reply
-    // threads
-    /*
-    for (int i = 0; i < GROUP_SIZE - 1; i++) {
-        rep = process_reply(rep, pir_client);
-        std::cout << "Reply length: " << rep.size() << std::endl;
+    int reps_per_thread = std::max(1.0, std::ceil(replies.size() / NUM_THREAD));
+    std::vector<std::thread> threads;
+    for (int i = 0; i < NUM_THREAD; i++) {
+        threads.push_back(std::thread(dummy_process_replies, reps_per_thread, replies[0], pir_client));
     }
-    */
-    for (std::vector<uint8_t> reply: replies) {
-        pir_decoded_replies.push_back(process_reply(reply, pir_client));
+
+    std::vector<uint8_t> pir_decoded_reply;
+    for (int j = 0; j < reps_per_thread; j++) {
+        pir_decoded_reply = process_reply(replies[0], pir_client);
     }
-    // barrier
+    std::vector<std::vector<uint8_t>> pir_decoded_replies(num_bucket, pir_decoded_reply);
+
+    // Wait for other threads
+    for (auto& t : threads) {
+        t.join();
+    }
+
     log_content += std::to_string(get_time()) + ',';
     // AES decrypt reply
     for (std::vector<uint8_t> reply: pir_decoded_replies) {
