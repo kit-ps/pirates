@@ -25,3 +25,4 @@ relay/bin/*
 relay/relay_log.txt
 .vscode
 logs/
+.env
