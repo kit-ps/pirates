@@ -6,8 +6,6 @@ RUN git clone https://github.com/microsoft/SEAL.git /home/app/SEAL
 RUN cd /home/app/SEAL && git checkout 4.1.1 && git pull 
 RUN cd /home/app/SEAL && cmake . -DBUILD_SHARED_LIBS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 RUN cd /home/app/SEAL && make && sudo make install
-RUN git clone https://github.com/drowe67/LPCNet.git /home/app/LPCNet
-RUN cd /home/app/LPCNet && mkdir build_linux && cd build_linux && cmake .. && make && make install
 RUN git clone https://github.com/rpclib/rpclib.git /home/app/rpclib
 RUN cd /home/app/rpclib && cmake . && make && sudo make install
 RUN mkdir -p /home/app/pirates

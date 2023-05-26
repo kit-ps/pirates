@@ -56,7 +56,6 @@ BatchEncoder *batch_encoder;
 Evaluator *evaluator;
 Encryptor *encryptor;
 seal::parms_id_type pid;
-//std::shared_ptr<seal::SEALContext> context;
 SEALContext *context;
 KeyGenerator *keygen;
 SecretKey secret_key;
@@ -77,9 +76,6 @@ std::map<int, int> SNIPPET_MAP = {
     { 280, 2656 },
     { 300, 2864 }
 };
-//void *gen_keys(void *thread_id);
-//void *pir(void *thread_id);
-//void *preprocess_db(void *thread_id);
 
 std::vector<uint8_t> compute_pir_reply() {
     auto reply = PIR_SERVER->get_response(0, PIR_QUERY);
