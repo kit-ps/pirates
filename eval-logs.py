@@ -17,7 +17,8 @@ df = raw_dfs[0]
 for idx, f in enumerate(raw_dfs[1:]):
     df = pandas.merge(df, f, on='id')
 
-df['mouth_to_ear'] = (df['t_a_decoding'] - df['t_b_caller'] + df['snippet_size'] + 10) / 1000
+df['mouth_to_ear'] = (df['t_a_decoding'] - df['t_b_caller'] + df['snippet_size'] + 10000) / 1000
+df['continuous'] = True if df['t_a_decoding'] - df['t_b_caller'] + 10 < df['snippet_size'] else False 
 df['exp_id'] = df['id'].str.split('-').apply(lambda x: x[0])
 print(df[['exp_id', 'group_size', 'num_users', 'snippet_size', 'mouth_to_ear']])
 
