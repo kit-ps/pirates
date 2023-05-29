@@ -6,12 +6,18 @@ import string
 GROUP_MIN        = 2
 GROUP_MAX        = 15
 GROUP_STEP       = 1
-GROUP_DEFAULT    = 5
+GROUP_DEFAULT    = 4
 
-USER_EXP_MIN     = 4
-USER_EXP_MAX     = 9
-USER_EXP_STEP    = 1
-USER_EXP_DEFAULT = 6
+#USER_EXP_MIN     = 4
+#USER_EXP_MAX     = 9
+#USER_EXP_STEP    = 1
+#USER_EXP_DEFAULT = 6
+
+
+USER_MIN     = 4
+USER_MAX     = 9
+USER_STEP    = 1
+USER_DEFAULT = 12
 
 SNIPPET_MIN      = 40
 SNIPPET_MAX      = 320
@@ -60,17 +66,17 @@ def start_containers():
 
 def run_group_bench():
     for g in range(GROUP_MIN, GROUP_MAX, GROUP_STEP):
-        gen_env(g, 2**USER_EXP_DEFAULT, SNIPPET_DEFAULT)
+        gen_env(g, USER_DEFAULT, SNIPPET_DEFAULT)
         start_containers()
 
 def run_user_bench():
-    for u in range(USER_EXP_MIN, USER_EXP_MAX, USER_EXP_STEP):
-        gen_env(GROUP_DEFAULT, 2**u, SNIPPET_DEFAULT)
+    for u in range(USER_MIN, USER_MAX, USER_STEP):
+        gen_env(GROUP_DEFAULT, u, SNIPPET_DEFAULT)
         start_containers()
 
 def run_snippet_bench():
     for s in range(SNIPPET_MIN, SNIPPET_MAX, SNIPPET_STEP):
-        gen_env(GROUP_DEFAULT, 2**USER_EXP_DEFAULT, s)
+        gen_env(GROUP_DEFAULT, USER_DEFAULT, s)
         start_containers()
 
 def main():

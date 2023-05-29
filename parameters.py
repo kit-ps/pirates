@@ -1,7 +1,7 @@
 import argparse
 import math
 
-NUM_THREAD = 128
+NUM_THREAD = 64
 
 def number_of_buckets(group_size):
     return math.ceil(1.5 * (group_size - 1))
