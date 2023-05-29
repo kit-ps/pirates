@@ -2,7 +2,7 @@ import pandas
 import datetime
 import sys
 
-WARMUP_ROUNDS = 2
+WARMUP_ROUNDS = 4
 
 roles = ['caller', 'relay', 'worker', 'callee']
 
