@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update && apt-get -y install sudo git wget cmake iputils-ping rpcbind iproute2 libc6-dev g++ libssl-dev build-essential autoconf libtool pkg-config clang cmake python3 libbotan-2-19 libbotan-2-dev
+RUN apt-get update && apt-get -y install sudo git wget cmake iputils-ping rpcbind iproute2 libc6-dev g++ libssl-dev build-essential autoconf libtool pkg-config clang libbotan-2-19 libbotan-2-dev
 
 # LPCNet (Voice Encoder)
 RUN git clone https://github.com/drowe67/LPCNet.git /home/app/LPCNet

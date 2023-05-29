@@ -13,12 +13,8 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <chrono>
-#include <thread>
 #include <pthread.h>
-#include <openssl/aes.h>
-#include "seal/seal.h"
 #include "lpcnet/lpcnet_freedv.h"
 #include <fstream>
 #include <sys/wait.h>
@@ -30,7 +26,6 @@
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
-#include <seal/seal.h>
 #include "logging_helper.h"
 
 std::string CLIENT_IP = "";
