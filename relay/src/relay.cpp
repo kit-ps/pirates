@@ -9,14 +9,13 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <arpa/inet.h>
-#include <openssl/aes.h>
-#include "seal/seal.h"
 #include <fstream>
-#include<rpc/server.h>
-#include<rpc/this_server.h>
-#include<rpc/client.h>
-#include"logging_helper.h"
+#include <cmath>
+#include <thread>
+#include <rpc/server.h>
+#include <rpc/this_server.h>
+#include <rpc/client.h>
+#include "logging_helper.h"
 
 std::string RELAY_IP = "";
 std::string WORKER_IP = "";
@@ -25,7 +24,6 @@ int SNIPPET_SIZE;
 int NUM_ROUNDS;
 int GROUP_SIZE;
 int NUM_USERS;
-//char *raw_db;
 
 /// 1. Receive snippet from client 
 /// 2. Extend snippet to database
@@ -105,14 +103,9 @@ int main(int argc, char **argv) {
                 abort();
         }
     }
-    // Create an RPC server
+    // Create RPC server
     rpc::server server(RELAY_IP, 8080);
-
-    // Bind the relay function to a remote procedure
     server.bind("process", process);
-
-    // Run the server
-    //server.async_run(1);
     server.run();
     return 0;
 }
