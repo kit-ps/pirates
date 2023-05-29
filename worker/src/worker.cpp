@@ -39,7 +39,7 @@ int SNIPPET_SIZE;
 int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
-int NUM_THREAD = 12;
+int NUM_THREAD = 64;
 int NUM_BUCKET;
 
 FastPIRParams *PIR_PARAMS;

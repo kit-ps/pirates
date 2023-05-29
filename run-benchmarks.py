@@ -4,14 +4,14 @@ import random
 import string
 
 GROUP_MIN        = 2
-GROUP_MAX        = 22
-GROUP_STEP       = 2
-GROUP_DEFAULT    = 3
+GROUP_MAX        = 15
+GROUP_STEP       = 1
+GROUP_DEFAULT    = 5
 
 USER_EXP_MIN     = 4
-USER_EXP_MAX     = 11
+USER_EXP_MAX     = 9
 USER_EXP_STEP    = 1
-USER_EXP_DEFAULT = 3
+USER_EXP_DEFAULT = 6
 
 SNIPPET_MIN      = 40
 SNIPPET_MAX      = 320
@@ -45,7 +45,7 @@ def gen_env(group_size, num_users, snippet_size):
         'IP_CALLER=172.31.0.3\n'
         'IP_CALLEE=172.31.0.4\n'
         'IP_RELAY=172.31.0.5\n'
-        'NUM_ROUNDS=5\n'
+        'NUM_ROUNDS=20\n'
         f'SNIPPET_SIZE={snippet_size}\n'
         f'GROUP_SIZE={group_size}\n'
         f'NUM_USERS={num_users}\n'
@@ -55,7 +55,7 @@ def gen_env(group_size, num_users, snippet_size):
         file.write(body)
 
 def start_containers():
-    cmd = ['sudo', 'docker', 'compose', 'up', '--build']
+    cmd = ['docker', 'compose', 'up', '--build']
     subprocess.run(cmd)
 
 def run_group_bench():
