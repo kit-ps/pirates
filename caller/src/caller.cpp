@@ -153,7 +153,7 @@ void process(int r) {
     }
     std::string log_content = RUN_ID + "-"
         + std::to_string(r) + ","
-        + std::to_string(GROUP_SIZE) + "-" + std::to_string(NUM_USERS) + "-" + std::to_string(SNIPPET_SIZE) + ","
+        + std::to_string(GROUP_SIZE) + "," + std::to_string(NUM_USERS) + "," + std::to_string(SNIPPET_SIZE) + ","
         + std::to_string(time_before) + ","
         + std::to_string(time_after_encoding) + ","
         + std::to_string(time_after_encryption);
