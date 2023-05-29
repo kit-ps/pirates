@@ -6,12 +6,12 @@ import string
 GROUP_MIN        = 2
 GROUP_MAX        = 22
 GROUP_STEP       = 2
-GROUP_DEFAULT    = 4
+GROUP_DEFAULT    = 3
 
 USER_EXP_MIN     = 4
 USER_EXP_MAX     = 11
 USER_EXP_STEP    = 1
-USER_EXP_DEFAULT = 4
+USER_EXP_DEFAULT = 3
 
 SNIPPET_MIN      = 40
 SNIPPET_MAX      = 320
@@ -20,19 +20,19 @@ SNIPPET_DEFAULT  = 60
 
 def clear_logs():
     with open('./logs/caller.csv', 'w') as file:
-        header = 'id,group_size,num_users,snippet_size,t_b_caller,t_a_encryption,t_a_encoding'
+        header = 'id,group_size,num_users,snippet_size,t_b_caller,t_a_encryption,t_a_encoding\n'
         file.write(header)
 
     with open('./logs/relay.csv', 'w') as file:
-        header = 'id,t_b_relay,t_a_relay'
+        header = 'id,t_b_relay,t_a_relay\n'
         file.write(header)
 
     with open('./logs/worker.csv', 'w') as file:
-        header = 'id,t_b_worker,t_a_preprocessing,t_a_replies'
+        header = 'id,t_b_worker,t_a_preprocessing,t_a_replies\n'
         file.write(header)
 
     with open('./logs/callee.csv', 'w') as file:
-        header = 'id,t_b_callee,t_a_pir,t_a_decryption,t_a_decoding'
+        header = 'id,t_b_callee,t_a_pir,t_a_decryption,t_a_decoding\n'
         file.write(header)
 
 def gen_env(group_size, num_users, snippet_size):
@@ -45,7 +45,7 @@ def gen_env(group_size, num_users, snippet_size):
         'IP_CALLER=172.31.0.3\n'
         'IP_CALLEE=172.31.0.4\n'
         'IP_RELAY=172.31.0.5\n'
-        'NUM_ROUNDS=1\n'
+        'NUM_ROUNDS=5\n'
         f'SNIPPET_SIZE={snippet_size}\n'
         f'GROUP_SIZE={group_size}\n'
         f'NUM_USERS={num_users}\n'
