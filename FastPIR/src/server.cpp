@@ -106,9 +106,8 @@ seal::Ciphertext Server::get_sum(std::vector<seal::Ciphertext> &query, seal::Gal
         int mid = next_power_of_two / 2;
         seal::Ciphertext left_sum, right_sum;
         if (end - start > 100) {
-            auto lsum = std::async(std::launch::async | std::launch::deferred, [&]{ return std::move(this->get_sum(query, gal_keys, start, start + mid - 1)); });
-            auto rsum = std::async(std::launch::async | std::launch::deferred, [&]{ return std::move(this->get_sum(query, gal_keys, start + mid, end)); });
-            left_sum = std::move(lsum.get());
+            auto rsum = std::async(std::launch::async, [&]{ return this->get_sum(query, gal_keys, start + mid, end); });
+            left_sum = get_sum(query, gal_keys, start, start + mid - 1);
             right_sum = std::move(rsum.get());
         } else {
             left_sum = get_sum(query, gal_keys, start, start + mid - 1);
