@@ -1,5 +1,7 @@
 #include "server.hpp"
 
+#include <future>
+
 Server::Server(FastPIRParams params)
 {
     context = new seal::SEALContext(params.get_seal_params());
@@ -97,15 +99,21 @@ PIRResponse Server::get_response(uint32_t client_id, PIRQuery query)
 
 seal::Ciphertext Server::get_sum(std::vector<seal::Ciphertext> &query, seal::GaloisKeys &gal_keys, uint32_t start, uint32_t end)
 {
-    seal::Ciphertext result;
-
     if (start != end)
     {
         int count = (end - start) + 1;
         int next_power_of_two = get_next_power_of_two(count);
         int mid = next_power_of_two / 2;
-        seal::Ciphertext left_sum = get_sum(query, gal_keys, start, start + mid - 1);
-        seal::Ciphertext right_sum = get_sum(query, gal_keys, start + mid, end);
+        seal::Ciphertext left_sum, right_sum;
+        if (end - start > 100) {
+            auto lsum = std::async(std::launch::async | std::launch::deferred, [&]{ return std::move(this->get_sum(query, gal_keys, start, start + mid - 1)); });
+            auto rsum = std::async(std::launch::async | std::launch::deferred, [&]{ return std::move(this->get_sum(query, gal_keys, start + mid, end)); });
+            left_sum = std::move(lsum.get());
+            right_sum = std::move(rsum.get());
+        } else {
+            left_sum = get_sum(query, gal_keys, start, start + mid - 1);
+            right_sum = get_sum(query, gal_keys, start + mid, end);
+        }
         evaluator->rotate_rows_inplace(right_sum, -mid, gal_keys);
         evaluator->add_inplace(left_sum, right_sum);
         return left_sum;
