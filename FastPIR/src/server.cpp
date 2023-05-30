@@ -1,6 +1,7 @@
 #include "server.hpp"
 
 #include <future>
+#include <boost/asio.hpp>
 
 Server::Server(FastPIRParams params)
 {
@@ -28,10 +29,14 @@ void Server::set_client_galois_keys(uint32_t client_id, seal::GaloisKeys gal_key
 void Server::encode_db(std::vector<std::vector<uint64_t>> db)
 {
     encoded_db = std::vector<seal::Plaintext>(db.size());
+    boost::asio::thread_pool pool(4);
     for (int i = 0; i < db.size(); i++)
     {
-        batch_encoder->encode(db[i], encoded_db[i]);
+        boost::asio::post(pool, [this, i, &db] {
+            batch_encoder->encode(db[i], encoded_db[i]);
+        });
     }
+    pool.join();
 }
 
 void Server::set_db(std::vector<std::vector<unsigned char> > db)
@@ -70,11 +75,15 @@ void Server::preprocess_db()
     }
     if (db_preprocessed)
         return;
+    boost::asio::thread_pool pool;
     auto pid = context->first_parms_id();
     for (int i = 0; i < encoded_db.size(); i++)
     {
-        evaluator->transform_to_ntt_inplace(encoded_db[i], pid);
+        boost::asio::post(pool, [this, pid, i] {
+            evaluator->transform_to_ntt_inplace(encoded_db[i], pid);
+        });
     }
+    pool.join();
     db_preprocessed = true;
 }
 
