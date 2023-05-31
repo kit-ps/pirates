@@ -66,13 +66,13 @@ def start_containers():
 def run_group_bench():
     for g in range(GROUP_MIN, GROUP_MAX, GROUP_STEP):
         for s in range(SNIPPET_MIN, SNIPPET_MAX, SNIPPET_STEP):
-            gen_env(g, USER_DEFAULT, SNIPPET_DEFAULT)
+            gen_env(g, USER_DEFAULT, s)
             start_containers()
 
 def run_user_bench():
     for u in range(USER_MIN, USER_MAX, USER_STEP):
         for s in range(SNIPPET_MIN, SNIPPET_MAX, SNIPPET_STEP):
-            gen_env(GROUP_DEFAULT, u, SNIPPET_DEFAULT)
+            gen_env(GROUP_DEFAULT, u, s)
             start_containers()
 
 def main():
