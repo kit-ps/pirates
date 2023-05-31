@@ -26,20 +26,19 @@
 #include "serialization_helper.h"
 #include "logging_helper.h"
 
-using namespace seal;
+//using namespace seal;
 
-unsigned int NUM_COLUMNS;
-int DB_ROWS;
+//unsigned int NUM_COLUMNS;
+//int DB_ROWS;
 
 std::string WORKER_IP = "";
 std::string CALLEE_IP = "";
 std::string RUN_ID = "";
-int MESSAGE_SIZE = 1152;
 int SNIPPET_SIZE;
 int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
-int NUM_THREAD = 64;
+int NUM_THREAD = 12;
 int NUM_BUCKET;
 
 FastPIRParams *PIR_PARAMS;
@@ -48,6 +47,7 @@ Client *PIR_CLIENT;
 PIRQuery PIR_QUERY;
 std::string PIR_SER_KEY;
 
+/*
 Ciphertext *query;
 Ciphertext *result;
 GaloisKeys *gal_keys;
@@ -59,6 +59,7 @@ seal::parms_id_type pid;
 SEALContext *context;
 KeyGenerator *keygen;
 SecretKey secret_key;
+*/
 
 std::map<int, int> SNIPPET_MAP = {
     { 40, 368 },

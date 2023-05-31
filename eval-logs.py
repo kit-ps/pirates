@@ -25,21 +25,9 @@ df['exp_id'] = df['id'].str.split('-').apply(lambda x: x[0])
 df['run_id'] = df['id'].str.split('-').apply(lambda x: x[1])
 print(df[['exp_id', 'group_size', 'num_users', 'snippet_size', 'mouth_to_ear']])
 
-#for experiment in set(df['exp_id'].to_list()):
 for experiment in list(dict.fromkeys(df['exp_id'].tolist())):
     tmp_df = df[df['exp_id'] == experiment]
     print(f"GS: {tmp_df['group_size'].iat[0]}, NU: {tmp_df['num_users'].iat[0]}, SS: {tmp_df['snippet_size'].iat[0]}")
     print(f"Mean: {tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].mean()}")
     print(f"Std. Dev.: {tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].std()}")
     print(f"Mean Ratio: {tmp_df['ratio'].iloc[WARMUP_ROUNDS:].mean()}\n")
-
-#print(df['continuous'].isin([True]))
-
-#tmp_df = df[df['continuous'] == True]
-#print(tmp_df['group_size', 'num_users', 'snippet_size','mouth_to_ear','continuous'])
-#df.to_csv("./logs/combined.csv")
-#print(tmp_df[['exp_id', 'group_size', 'num_users', 'snippet_size', 'mouth_to_ear', 'continuous']])
-
-#tmp_df = df[df['run_id'] == '5']
-#print(df[['snippet_size', 'pir_reply_time', 'ratio', 'mouth_to_ear']])
-    
