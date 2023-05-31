@@ -15,7 +15,7 @@ if __name__ == '__main__':
     snippet_length = 100
     delays = [0.02,0.05,0.1,0.2]
     for delay in delays:
-        play_sound(delay, snippet_length)
+        play_sound(snippet_length*delay, snippet_length)
 
 
 
