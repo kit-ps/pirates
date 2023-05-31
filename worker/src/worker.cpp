@@ -20,6 +20,10 @@
 #include <rpc/client.h>
 #include <rpc/this_server.h>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <future>
+#include <boost/asio.hpp>
 #include "../FastPIR/src/fastpirparams.hpp"
 #include "../FastPIR/src/server.hpp"
 #include "../FastPIR/src/client.hpp"
@@ -46,6 +50,7 @@ Server *PIR_SERVER;
 Client *PIR_CLIENT;
 PIRQuery PIR_QUERY;
 std::string PIR_SER_KEY;
+boost::asio::thread_pool *pool;
 
 /*
 Ciphertext *query;
@@ -85,18 +90,14 @@ std::vector<uint8_t> compute_pir_reply() {
     return result;
 }
 
-/// Call compute_pir_reply count times and ignore return values
-void compute_dummy_replies(int count) {
-    for (int i = 0; i < count; i++) {
-        compute_pir_reply();
-    }
-}
-
 void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
-    
     uint64_t time_before_worker = get_time();
 
     std::cout << "Hi from worker" << std::endl;
+
+    std::mutex m;
+    std::condition_variable cv;
+    int completed = 0;
 
     PIR_SERVER->set_db(raw_db);
 
@@ -114,28 +115,33 @@ void process(int r, const std::vector<std::vector<uint8_t>>& raw_db) {
     // Total number of replies up to callee: calle_index * number of buckets
     // Number of buckets: 1.5 * group size -1
     int replies_total = callee_index * NUM_BUCKET;
-    int replies_per_thread = std::max(1.0, std::ceil(replies_total / NUM_THREAD));
-    std::vector<std::thread> threads;
-    
-    // Span NUM_THREAD - 1 daughter threads and give each replies to compute
-    for (int i = 0; i < NUM_THREAD - 1; i++) {
-        threads.push_back(std::thread(compute_dummy_replies, replies_per_thread));
+
+    std::promise<std::vector<uint8_t>> reply_promise;
+    auto reply_future = reply_promise.get_future();
+
+    for (int i= 0; i < replies_total - 1; ++i) {
+        boost::asio::post(*pool, [&m,&cv,&completed] {
+            compute_pir_reply();
+            {
+                std::unique_lock lk(m);
+                completed++;
+            }
+            cv.notify_all();
+        });
     }
 
-    // Compute remaining replies in main thread
-    std::vector<std::vector<uint8_t>> all_replies;
-    for (int j = 0; j < replies_per_thread; j++) {
-        std::vector<uint8_t> rep = compute_pir_reply();
-        all_replies.push_back(rep);
-    }
+    boost::asio::post(*pool, std::bind([] (std::promise<std::vector<uint8_t>>& reply_promise) {
+        reply_promise.set_value(compute_pir_reply());
+    }, std::move(reply_promise)));
 
-    std::vector<std::vector<uint8_t>> callee_replies(NUM_BUCKET, all_replies[0]);
+    std::vector<std::vector<uint8_t>> callee_replies(NUM_BUCKET, reply_future.get());
 
     // Wait for other threads
-    for (auto& t : threads) {
-        t.join();
+    {
+        std::unique_lock lk(m);
+        cv.wait(lk, [&completed,replies_total] { return completed == replies_total - 1; });
     }
-    
+
     uint64_t time_after_replies = get_time();
 
     // 4. Send replies to callee
@@ -208,6 +214,8 @@ int main(int argc, char **argv) {
     PIR_QUERY = PIR_CLIENT->gen_query(0); 
     PIR_SER_KEY = seal_ser(PIR_CLIENT->get_secret_key());
 
+    pool = new boost::asio::thread_pool(NUM_THREAD);
+
     // Create database
     //raw_db = new
     // Receive data from relay
@@ -217,6 +225,8 @@ int main(int argc, char **argv) {
     // Bind the sendVoice function to a remote procedure
     server.bind("process", process);
     server.run();
+
+    delete pool;
 
     return 0;
 }
