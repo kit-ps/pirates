@@ -25,17 +25,23 @@ df['exp_id'] = df['id'].str.split('-').apply(lambda x: x[0])
 df['run_id'] = df['id'].str.split('-').apply(lambda x: x[1])
 print(df[['exp_id', 'group_size', 'num_users', 'snippet_size', 'mouth_to_ear']])
 
-result_df = pandas.DataFrame(columns=['group_size', 'num_users', 'snippet_size', 'mean_m2e', 'std_dev_m2e', 'mean_ratio'])
+result_dict = {
+    'group_size': [],
+    'num_users': [],
+    'snippet_size': [],
+    'mean_m2e': [],
+    'std_dev_m2e': [],
+    'mean_ratio': [],
+    }
 for experiment in list(dict.fromkeys(df['exp_id'].tolist())):
     tmp_df = df[df['exp_id'] == experiment]
-    row = {
-        'group_size': tmp_df['group_size'].iat[0],
-        'num_users': tmp_df['num_users'].iat[0],
-        'snippet_size': tmp_df['snippet_size'].iat[0],
-        'mean_m2e': tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].mean(),
-        'std_dev_m2e': tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].std(),
-        'mean_ratio': tmp_df['ratio'].iloc[WARMUP_ROUNDS:].mean(),
-    }
-    result_df.append(row)
+    result_dict['group_size'].append(tmp_df['group_size'].iat[0])
+    result_dict['num_users'].append(tmp_df['num_users'].iat[0])
+    result_dict['snippet_size'].append(tmp_df['snippet_size'].iat[0])
+    result_dict['mean_m2e'].append(tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].mean())
+    result_dict['std_dev_m2e'].append(tmp_df['mouth_to_ear'].iloc[WARMUP_ROUNDS:].std())
+    result_dict['mean_ratio'].append(tmp_df['ratio'].iloc[WARMUP_ROUNDS:].mean())
+
+result_df = pandas.DataFrame(result_dict)
 
 print(result_df)
