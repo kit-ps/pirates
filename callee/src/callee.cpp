@@ -138,7 +138,6 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
 
     // Declare data type for reply vector
     std::vector<std::vector<uint8_t>> aes_decrypted_replies;
-    std::vector<std::vector<short>> lpc_decoded_replies;
     uint64_t time_before_callee = get_time();
     log_content += std::to_string(time_before_callee) + ",";
 
@@ -151,7 +150,7 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     auto pir_decoded_reply_future = pir_decoded_reply_promise.get_future();
         
     for (int i= 0; i < replies.size() - 1; ++i) {
-        boost::asio::post(*pool, [&m,&cv,&completed] {
+        boost::asio::post(*pool, [&m,&cv,&completed,&replies,&pir_client] {
             process_reply(replies[0], pir_client);
             {
                 std::unique_lock lk(m);
@@ -161,17 +160,18 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
         });
     }
 
-    boost::asio::post(*pool, std::bind([] (std::promise<std::vector<uint8_t>>& pir_decoded_reply_promise) {
+    boost::asio::post(*pool, std::bind([&replies,&pir_client] (std::promise<std::vector<uint8_t>>& pir_decoded_reply_promise) {
         pir_decoded_reply_promise.set_value(process_reply(replies[0], pir_client));
     }, std::move(pir_decoded_reply_promise)));
 
-    std::vector<std::vector<uint8_t>> pir_decoded_replies(NUM_BUCKET, pir_decoded_reply_future.get());
+    std::vector<std::vector<uint8_t>> pir_decoded_replies(replies.size(), pir_decoded_reply_future.get());
 
     // Wait for other threads
     {
         std::unique_lock lk(m);
-        cv.wait(lk, [&completed,replies.size()] { return completed == replies.size() - 1; });
+        cv.wait(lk, [&completed,&replies] { return completed == replies.size() - 1; });
     }
+    completed = 0;
 
     log_content += std::to_string(get_time()) + ',';
 
@@ -187,7 +187,7 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
     auto lpc_decoded_reply_future = lpc_decoded_reply_promise.get_future();
         
     for (int i= 0; i < replies.size() - 1; ++i) {
-        boost::asio::post(*pool, [&m,&cv,&completed] {
+        boost::asio::post(*pool, [&m,&cv,&completed,&aes_decrypted_replies] {
             decode_reply(aes_decrypted_replies[0]);
             {
                 std::unique_lock lk(m);
@@ -197,16 +197,16 @@ void process(int r, const std::string& secret_key, const std::vector<std::vector
         });
     }
 
-    boost::asio::post(*pool, std::bind([] (std::promise<std::vector<short>>& lpc_decoded_reply_promise) {
+    boost::asio::post(*pool, std::bind([&aes_decrypted_replies] (std::promise<std::vector<short>>& lpc_decoded_reply_promise) {
         lpc_decoded_reply_promise.set_value(decode_reply(aes_decrypted_replies[0]));
     }, std::move(lpc_decoded_reply_promise)));
 
-    std::vector<std::vector<uint8_t>> lpc_decoded_replies(NUM_BUCKET, lpc_decoded_reply_future.get());
+    std::vector<std::vector<short>> lpc_decoded_replies(replies.size(), lpc_decoded_reply_future.get());
 
     // Wait for other threads
     {
         std::unique_lock lk(m);
-        cv.wait(lk, [&completed,replies.size()] { return completed == replies.size() - 1; });
+        cv.wait(lk, [&completed,&replies] { return completed == replies.size() - 1; });
     }
 
     uint64_t time_after_callee = get_time();
