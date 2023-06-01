@@ -32,8 +32,8 @@ for idx, f in enumerate(raw_dfs[1:]):
     df = pandas.merge(df, f, on='id')
 
 df['mouth_to_ear'] = (df['t_a_decoding'] - df['t_b_caller'] + df['snippet_size'] + 10000 + 15000) / 1000
-df['pir_reply_time'] = (df['t_a_replies'] - df['t_b_worker']) / 1000 
-df['ratio'] = df['pir_reply_time'] / df['snippet_size']
+df['blocking_time'] = (df['t_a_decoding'] - df['t_b_worker']) / 1000 
+df['ratio'] = df['blocking_time'] / df['snippet_size']
 df['exp_id'] = df['id'].str.split('-').apply(lambda x: x[0])
 df['run_id'] = df['id'].str.split('-').apply(lambda x: x[1])
 
@@ -61,7 +61,7 @@ result_df['params'] = result_df['group_size'].map(str) + result_df['num_users'].
 filtered_df = pandas.DataFrame(columns=result_df.columns)
 for i, param in enumerate(list(dict.fromkeys(result_df['params'].tolist()))):
     tmp_df = result_df.loc[
-        (result_df['mean_ratio'].astype(float) < 1.1) &
+        (result_df['mean_ratio'].astype(float) < 2.0) &
         (result_df['params'] == param)
     ]
     min_row = tmp_df[tmp_df['mean_m2e'] == tmp_df['mean_m2e'].min()]
