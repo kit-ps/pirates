@@ -7,6 +7,19 @@ WARMUP_ROUNDS = 10
 pandas.set_option('display.max_rows', None)
 roles = ['caller', 'relay', 'worker', 'callee']
 
+def print_step_times(dataframe):
+    print(f"Voice Encode: {round((dataframe['t_a_encoding'] - dataframe['t_b_caller']).mean() / 1000, 2)}ms")
+    print(f"Encryption: {round((dataframe['t_a_encryption'] - dataframe['t_a_encoding']).mean() / 1000, 2)}ms")
+    print(f"Caller->Relay: {round((dataframe['t_b_relay'] - dataframe['t_a_encryption']).mean() / 1000, 2)}ms")
+    print(f"Relay->Worker: {round((dataframe['t_b_worker'] - dataframe['t_b_relay']).mean() / 1000, 2)}ms")
+    print(f"DB Preproc.: {round((dataframe['t_a_preprocessing'] - dataframe['t_b_worker']).mean() / 1000, 2)}ms")
+    print(f"PIR Replies: {round((dataframe['t_a_replies'] - dataframe['t_a_preprocessing']).mean() / 1000, 2)}ms")
+    print(f"Worker->Callee: {round((dataframe['t_b_callee'] - dataframe['t_a_replies']).mean() / 1000, 2)}ms")
+    print(f"PIR Decode: {round((dataframe['t_a_pir'] - dataframe['t_b_callee']).mean() / 1000, 2)}ms")
+    print(f"Decrypt: {round((dataframe['t_a_decryption'] - dataframe['t_a_pir']).mean() / 1000, 2)}ms")
+    print(f"Voice Decode: {round((dataframe['t_a_decoding'] - dataframe['t_a_decryption']).mean() / 1000, 2)}ms")
+    print(f"Mouth-to-ear: {round(dataframe['mouth_to_ear'].mean(), 2)}ms")
+
 # Read the csv files into separate dataframes
 raw_dfs = []
 for role in roles:
@@ -47,10 +60,38 @@ result_df['params'] = result_df['group_size'].map(str) + result_df['num_users'].
 
 filtered_df = pandas.DataFrame(columns=result_df.columns)
 for i, param in enumerate(list(dict.fromkeys(result_df['params'].tolist()))):
-    tmp_df = result_df[result_df['mean_ratio'].astype(float) < 1.1] 
-    tmp_df = tmp_df[tmp_df['params'] == param] 
+    tmp_df = result_df.loc[
+        (result_df['mean_ratio'].astype(float) < 1.1) &
+        (result_df['params'] == param)
+    ]
     min_row = tmp_df[tmp_df['mean_m2e'] == tmp_df['mean_m2e'].min()]
     filtered_df = pandas.concat([filtered_df, min_row])
 
 print(filtered_df)
-#result_df.to_csv('./logs/gs_0737.csv')
+
+print("\nLarge Snippet Breakdown")
+print("-----------------------")
+large_snippet_df = df.loc[
+    (df['group_size'].astype(int) == 2) &
+    (df['num_users'].astype(int) == 6) &
+    (df['snippet_size'].astype(int) == 200)
+]
+print_step_times(large_snippet_df)
+ 
+print("\nLarge Group Breakdown")
+print("---------------------")
+large_group_df = df.loc[
+    (df['group_size'].astype(int) == 5) &
+    (df['num_users'].astype(int) == 6) &
+    (df['snippet_size'].astype(int) == 80)
+]
+print_step_times(large_group_df)
+
+print("\nMany Users Breakdown")
+print("--------------------")
+many_users_df = df.loc[
+    (df['group_size'].astype(int) == 3) &
+    (df['num_users'].astype(int) == 11) &
+    (df['snippet_size'].astype(int) == 80)
+]
+print_step_times(many_users_df)

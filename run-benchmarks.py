@@ -14,18 +14,18 @@ GROUP_DEFAULT    = 3
 #USER_EXP_DEFAULT = 6
 
 USER_MIN     = 3
-USER_MAX     = 12
+USER_MAX     = 15
 USER_STEP    = 1
-USER_DEFAULT = 8
+USER_DEFAULT = 6
 
 SNIPPET_MIN      = 40
-SNIPPET_MAX      = 320
+SNIPPET_MAX      = 280
 SNIPPET_STEP     = 20
 SNIPPET_DEFAULT  = 60
 
 def clear_logs():
     with open('./logs/caller.csv', 'w') as file:
-        header = 'id,group_size,num_users,snippet_size,t_b_caller,t_a_encryption,t_a_encoding\n'
+        header = 'id,group_size,num_users,snippet_size,t_b_caller,t_a_encoding,t_a_encryption\n'
         file.write(header)
 
     with open('./logs/relay.csv', 'w') as file:
@@ -50,7 +50,7 @@ def gen_env(group_size, num_users, snippet_size):
         'IP_CALLER=172.31.0.3\n'
         'IP_CALLEE=172.31.0.4\n'
         'IP_RELAY=172.31.0.5\n'
-        'NUM_ROUNDS=20\n'
+        'NUM_ROUNDS=100\n'
         f'SNIPPET_SIZE={snippet_size}\n'
         f'GROUP_SIZE={group_size}\n'
         f'NUM_USERS={num_users}\n'
