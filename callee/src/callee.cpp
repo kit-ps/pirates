@@ -131,6 +131,11 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
 void process(int r, const std::string& secret_key, const std::vector<std::vector<uint8_t>>& replies) {
     std::string log_content = RUN_ID + '-' + std::to_string(r) + ',';
     std::cout << "Hi from callee" << std::endl;
+
+    std::mutex m;
+    std::condition_variable cv;
+    int completed = 0;
+
     // Declare data type for reply vector
     std::vector<std::vector<uint8_t>> aes_decrypted_replies;
     std::vector<std::vector<short>> lpc_decoded_replies;
