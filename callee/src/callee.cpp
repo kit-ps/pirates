@@ -45,7 +45,7 @@ int NUM_ROUNDS;
 int NUM_USERS;
 int GROUP_SIZE;
 int NUM_CLIENTS = 512;
-int NUM_THREAD = 8;
+int NUM_THREAD = 32;
 boost::asio::thread_pool *pool;
 
 std::map<int, int> SNIPPET_MAP = {
