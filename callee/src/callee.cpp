@@ -94,6 +94,9 @@ std::vector<uint8_t> decrypt_reply(std::vector<uint8_t> snippet) {
 }
 
 std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
+    std::mutex m;
+    std::condition_variable cv;
+    int completed = 0;
     // Taken from lpcnet_dec.c
     int nbits = 0, nerrs = 0;
     // Default in lpcnet_dec is 0.0
@@ -104,25 +107,44 @@ std::vector<short> decode_reply(std::vector<uint8_t> snippet) {
     int ber_st = 0;
     // We decode
     LPCNetFreeDV *lf = lpcnet_freedv_create(0);
-    // Taken from lpcnet_enc.c
-    char frame[lpcnet_bits_per_frame(lf)];
-    short pcm[lpcnet_samples_per_frame(lf)];
 
-    std::vector<short> decoded_snippet;
 
-    int num_frames = snippet.size() / lpcnet_bits_per_frame(lf);
+    int bpf = lpcnet_bits_per_frame(lf);
+    int spf = lpcnet_samples_per_frame(lf);
+
+    int num_frames = snippet.size() / bpf;
+    std::vector<short> decoded_snippet(spf * num_frames, 0);
+
     for (int i = 0; i < num_frames; i++) {
-        // copy from reply vector into frame
-        std::copy(
-                snippet.begin() + i * lpcnet_bits_per_frame(lf),
-                snippet.begin() + (i+1) * lpcnet_bits_per_frame(lf), 
-                frame);
+        boost::asio::post(*pool, [&completed,&m,&cv,&snippet,i,bpf,spf,&decoded_snippet,lf] {
+            // Taken from lpcnet_enc.c
+            char frame[bpf];
+            short pcm[spf];
 
-        lpcnet_dec(lf,frame,pcm);
-        for (short s : pcm) {
-            decoded_snippet.push_back(s);
-        }
+
+            // copy from reply vector into frame
+            std::copy(snippet.begin() + i * bpf, snippet.begin() + (i+1) * bpf, frame);
+            lpcnet_dec(lf,frame,pcm);
+
+            for (int j = 0; j < spf; ++j) {
+                decoded_snippet[i * spf + j] = pcm[j];
+            }
+
+            {
+                std::unique_lock lk(m);
+                completed++;
+            }
+            cv.notify_all();
+        });
     }
+
+    // Wait for other threads
+    {
+        std::unique_lock lk(m);
+        cv.wait(lk, [&completed,num_frames] { return completed == num_frames; });
+    }
+
+    //lpcnet_freedv_destroy(lf);
 
     return decoded_snippet;
 }
